@@ -13,7 +13,8 @@
 #'   \item{sigma}{The covariance matrix.}
 #' @seealso \code{\link{SEMSummary}}
 #' @keywords multivariate
-#' @importFrom lavaan lavaan
+#' @importFrom lavaan lavCor lavInspect
+#' @author Suggested by Yves Rosseel author of the lavaan package on which this depends
 #' @export
 #' @examples
 #' # sample data
@@ -37,20 +38,20 @@
 #' # clean up
 #' rm(Xmiss)
 moments <- function(data, ...) {
+
   if (!is.data.frame(data)) {
     data <- as.data.frame(data)
   }
 
-  n <- colnames(data)
-  X <- lavaan:::lav_data_full(data, ov.names = n, missing = "fiml")
-  mpat <- lavaan:::getMissingPatternStats(X = X@X[[1L]], Mp = X@Mp[[1L]])
-  moments <- lavaan:::estimate.moments.EM(X = X@X[[1L]], M = mpat, verbose=FALSE, ...)
-  sigma <- moments$sigma
-  dimnames(sigma) <- list(n, n)
-  mu <- moments$mu
-  names(mu) <- n
+  ## from Yves
+  fit <- lavCor(data, output = "fit", missing = "ml")
+  out <- lavInspect(fit, "sampstat.h1")
 
-  return(list(mu = mu, sigma = sigma))
+  class(out$cov) <- "matrix"
+  class(out$mean) <- "numeric"
+  names(out) <- c("sigma", "mu")
+
+  return(out)
 }
 
 #' Summary Statistics for a SEM Analysis
@@ -124,6 +125,18 @@ moments <- function(data, ...) {
 #'
 #' ## clean up
 #' rm(s)
+#'
+#' #' # sample data
+#' Xmiss <- as.matrix(iris[, -5])
+#' # make 25% missing completely at random
+#' set.seed(10)
+#' Xmiss[sample(length(Xmiss), length(Xmiss) * .25)] <- NA
+#' Xmiss <- as.data.frame(Xmiss)
+#'
+#' SEMSummary(~ ., data = Xmiss, use = "fiml")
+#'
+#' ## clean up
+#' rm(Xmiss)
 SEMSummary <- function(formula, data,
   use = c("fiml", "pairwise.complete.obs", "complete.obs")) {
   env <- environment(formula)
@@ -454,4 +467,92 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
   colnames(out)[1] <- ""
 
   return(out)
+}
+
+
+
+#' Winsorize at specified percentiles
+#'
+#' Simple function winsorizes data at the specified percentile.
+#'
+#' @param d A vector, matrix, or data frame to be winsorized
+#' @param percentile The percentile bounded by [0, 1] to winsorize data at.
+#'   If a data frame or matrix is provided for the data, this should have the
+#'   same length as the number of columns, or it will be repeated for all.
+#' @param values If values are specified, use these instead of calculating by percentiles.
+#'   Should be a data frame with columns named \dQuote{low}, and \dQuote{high}.
+#'   If a data frame or matrix is provided for the data, there should be as many rows
+#'   for values to winsorize at as there are columns in the data.
+#' @param na.rm A logical whether to remove NAs.
+#' @return winsorized data. Attributes are included to list the exact values
+#'   (for each variable, if a data frame or matrix) used to winsorize
+#'   at the lower and upper ends.
+#' @importFrom stats quantile
+#' @export
+#' @examples
+#' dev.new(width = 10, height = 5)
+#' par(mfrow = c(1, 2))
+#' hist(as.vector(eurodist), main = "Eurodist")
+#' hist(winsorizor(as.vector(eurodist), .05), main = "Eurodist with lower and upper\n5% winsorized")
+winsorizor <- function(d, percentile, values, na.rm = TRUE) {
+    if (!missing(percentile)) {
+      stopifnot(percentile >= 0 && percentile <= 1)
+    } else if (missing(percentile)) {
+      percentile <- NA_real_
+    }
+
+    stopifnot(is.vector(d) || is.matrix(d) || is.data.frame(d))
+
+    f <- function(x, percentile, values, na.rm) {
+          if (!missing(values)) {
+            low <- values[, "low"]
+            high <- values[, "high"]
+            if (missing(percentile)) {
+              percentile <- NA_real_
+            }
+          } else {
+            low <- quantile(x, probs = 0 + percentile, na.rm = na.rm)
+            high <- quantile(x, probs = 1 - percentile, na.rm = na.rm)
+          }
+
+          out <- pmin(pmax(x, low), high)
+
+          new.attr <- data.frame(low = low, high = high, percentile = percentile)
+          rownames(new.attr) <- NULL
+
+          attributes(out) <- c(attributes(x), winsorizedValues = list(new.attr))
+
+          return(out)
+    }
+
+    if (is.vector(d)) {
+        out <- f(d, percentile = percentile, values = values, na.rm = na.rm)
+    } else if (is.matrix(d) || is.data.frame(d)) {
+        if (length(percentile) == 1) {
+          percentile <- rep(percentile, ncol(d))
+        }
+
+        if (missing(values)) {
+          tmp <- lapply(1:ncol(d), function(i) {
+            f(d[, i], percentile = percentile[i], na.rm = na.rm)
+          })
+        } else {
+          tmp <- lapply(1:ncol(d), function(i) {
+            f(d[, i], percentile = percentile[i], values = values[i, ], na.rm = na.rm)
+          })
+        }
+
+        all.attr <- do.call(rbind, lapply(tmp, function(x) attr(x, "winsorizedValues")))
+        all.attr$variable <- colnames(d)
+        rownames(all.attr) <- NULL
+        out <- as.data.frame(lapply(tmp, as.vector))
+
+        if (is.matrix(d)) {
+            out <- as.matrix(out)
+        }
+
+        attributes(out) <- c(attributes(d), winsorizedValues = list(all.attr))
+    }
+
+    return(out)
 }
