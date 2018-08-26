@@ -261,17 +261,21 @@ SEMSummary.fit <- function(formula, data,
 
 
 
-#' EGL Table function makes nice tables
+#' Function makes nice tables
 #'
 #' Give a dataset and a list of variables, or just the data
 #' in the vars.  For best results, convert categorical
-#' variables into factors.
+#' variables into factors.  Provides a table of estimated descriptive
+#' statistics optionally by group levels.
 #'
 #' @param vars Either an index (numeric or character) of
 #'   variables to access from the \code{data} argument,
 #'   or the data to be described itself.
 #' @param g A variable used tou group/separate the data prior
 #'   to calculating descriptive statistics.
+#' @param idvar A character string indicating the variable name
+#'   of the ID variable.  Not currently used, but will eventually
+#'   support \code{egltable} supporting repeated measures data.
 #' @param data optional argument of the dataset containing
 #'   the variables to be described.
 #' @param strict Logical, whether to strictly follow the
@@ -304,26 +308,33 @@ SEMSummary.fit <- function(formula, data,
 #'   parametric = c(TRUE, TRUE, FALSE, FALSE))
 #' egltable(colnames(iris)[1:4], "Species", iris,
 #'   parametric = c(TRUE, TRUE, FALSE, FALSE), simChisq=TRUE)
-egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = FALSE, sims = 1e6) {
+#'
+#' diris <- as.data.table(iris)
+#' egltable("Sepal.Length", g = "Species", data = diris)
+egltable <- function(vars, g, idvar, data, strict=TRUE, parametric = TRUE, simChisq = FALSE, sims = 1e6) {
   if (!missing(data)) {
     if (is.data.table(data)) {
+      dat <- data[, vars, with=FALSE]
     } else {
-      dat <- as.data.frame(data[, vars, drop=FALSE], stringsAsFactors=FALSE)
+      dat <- as.data.table(data[, vars, drop=FALSE])
     }
     if (!missing(g)) {
       if (length(g) == 1) {
         g <- data[[g]]
       }
     }
+    if (!missing(idvar)) {
+      ids <- data[[idvar]]
+    }
   } else {
-    dat <- as.data.frame(vars, stringsAsFactors=FALSE)
+    dat <- as.data.table(vars)
   }
 
   if (missing(g)) {
     g <- rep(1, nrow(dat))
   }
 
-  g <- as.factor(g)
+  g <- droplevels(as.factor(g))
 
   if (identical(length(parametric), 1L)) {
     if (isTRUE(parametric)) {
@@ -333,7 +344,7 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
     }
   }
 
-  vnames <- colnames(dat)
+  vnames <- names(dat)
 
   k <- ncol(dat)
 
@@ -356,7 +367,8 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
   }
 
 
-  tmpout <- by(dat, g, function(d) {
+  tmpout <- lapply(levels(g), function(gd) {
+    d <- dat[which(g == gd)]
     tmpres <- NULL
     reslab <- ""
 
@@ -365,78 +377,76 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
         n <- vnames[v]
         if (parametric[v]) {
           ## use parametric tests
-          data.frame(
+          data.table(
             Variable = sprintf("%s%s", n, c("", ", M (SD)")[multi+1]),
-            Res = sprintf("%0.2f (%0.2f)", mean(d[[n]], na.rm=TRUE), sd(d[[n]], na.rm=TRUE)),
-            stringsAsFactors=FALSE)
+            Res = sprintf("%0.2f (%0.2f)", mean(d[[n]], na.rm=TRUE), sd(d[[n]], na.rm=TRUE)))
         } else {
-          data.frame(
+          data.table(
             Variable = sprintf("%s%s", n, c("", ", Mdn (IQR)")[multi+1]),
             Res = sprintf("%0.2f (%0.2f)", median(d[[n]], na.rm=TRUE),
-                          abs(diff(quantile(d[[n]], c(.25, .75), na.rm = TRUE)))),
-            stringsAsFactors=FALSE)
+                          abs(diff(quantile(d[[n]], c(.25, .75), na.rm = TRUE)))))
         }
       })
 
       names(tmpcont) <- vnames[contvars.index]
       tmpres <- c(tmpres, tmpcont)
 
-      reslab <- paste0(reslab, c(ifelse(parametric[contvars.index[1]], "M (SD)", "Mdn (IQR)"), "See Rows")[multi+1])
+      reslab <- paste0(reslab, c(ifelse(parametric[contvars.index[1]],
+                                        "M (SD)", "Mdn (IQR)"), "See Rows")[multi+1])
     }
 
     if (length(catvars.index)) {
       tmpcat <- lapply(vnames[catvars.index], function(n) {
-         x <- table(d[, n])
-        data.frame(
+         x <- table(d[[n]])
+        data.table(
           Variable = c(n, paste0("  ", names(x))),
-          Res = c("", sprintf("%d (%2.1f)", x, prop.table(x) * 100)),
-          stringsAsFactors=FALSE)
+          Res = c("", sprintf("%d (%2.1f)", x, prop.table(x) * 100)))
       })
 
       names(tmpcat) <- vnames[catvars.index]
       tmpres <- c(tmpres, tmpcat)
 
-      reslab <- paste0(reslab, ifelse(nzchar(reslab), "/N (%)", "N (%)"))
+      reslab <- paste0(reslab, ifelse(nzchar(reslab),
+                                      "/N (%)", "N (%)"))
     }
 
     tmpres <- lapply(tmpres[vnames], function(d) {
-      colnames(d) <- c("Vars", reslab)
+      setnames(d, old = names(d), c("Vars", reslab))
       return(d)
       })
 
     return(tmpres)
-  }, simplify=FALSE)
+  })
 
 
   if (length(levels(g)) > 1) {
     tmpout <- lapply(seq_along(vnames), function(v) {
-      out <- do.call(cbind.data.frame, lapply(1:length(levels(g)), function(i) {
+      out <- do.call(cbind, lapply(1:length(levels(g)), function(i) {
         d <- tmpout[[i]][[v]]
-        colnames(d)[2] <- paste(levels(g)[i], colnames(d)[2], sep = " ")
+        setnames(d, old = names(d)[2], paste(levels(g)[i], names(d)[2], sep = " "))
         if (i == 1) {
           return(d)
         } else {
-          return(d[, -1, drop = FALSE])
+          return(d[, -1, with = FALSE])
         }
       }))
 
       if (length(contvars.index)) {
         if (v %in% contvars.index) {
           if (parametric[v]) {
-            tests <- summary(aov(dv ~ g, data = data.frame(dv = dat[[v]], g = g)))[[1]]
-            out <- cbind.data.frame(out,
-                             Test = c(sprintf("F(%d, %d) = %0.2f, %s", tests[1, "Df"], tests[2, "Df"], tests[1, "F value"],
-                                              formatPval(tests[1, "Pr(>F)"], 3, 3)),
-                                      rep("", nrow(out) - 1)),
-                             stringsAsFactors = FALSE)
+            tests <- summary(aov(dv ~ g, data = data.table(dv = dat[[v]], g = g)))[[1]]
+            out <- cbind(out,
+                         Test = c(sprintf("F(%d, %d) = %0.2f, %s",
+                                          tests[1, "Df"], tests[2, "Df"], tests[1, "F value"],
+                                          formatPval(tests[1, "Pr(>F)"], 3, 3, includeP=TRUE)),
+                                  rep("", nrow(out) - 1)))
           } else {
             tests <- kruskal.test(dv ~ g, data = data.frame(dv = dat[[v]], g = g))
-            out <- cbind.data.frame(out,
-                             Test = c(sprintf("KW chi-square = %0.2f, df = %d, %s",
-                                            tests$statistic, tests$parameter,
-                                            formatPval(tests$p.value, 3, 3)),
-                                      rep("", nrow(out) - 1)),
-                             stringsAsFactors = FALSE)
+            out <- cbind(out,
+                         Test = c(sprintf("KW chi-square = %0.2f, df = %d, %s",
+                                          tests$statistic, tests$parameter,
+                                          formatPval(tests$p.value, 3, 3, includeP=TRUE)),
+                                  rep("", nrow(out) - 1)))
           }
         }
       }
@@ -446,13 +456,12 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
           tests <- chisq.test(xtabs(~ dv + g, data = data.frame(dv = dat[[v]], g = g)),
                               correct = FALSE,
                               simulate.p.value = simChisq, B = sims)
-          out <- cbind.data.frame(out,
-                           Test = c(sprintf("Chi-square = %0.2f, %s, %s",
-                                          tests$statistic,
-                                          ifelse(simChisq, "simulated", sprintf("df = %d", tests$parameter)),
-                                          formatPval(tests$p.value, 3, 3)),
-                                    rep("", nrow(out) - 1)),
-                           stringsAsFactors = FALSE)
+          out <- cbind(out,
+                       Test = c(sprintf("Chi-square = %0.2f, %s, %s",
+                                        tests$statistic,
+                                        ifelse(simChisq, "simulated", sprintf("df = %d", tests$parameter)),
+                                        formatPval(tests$p.value, 3, 3, includeP=TRUE)),
+                                rep("", nrow(out) - 1)))
         }
       }
 
@@ -462,20 +471,17 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
     tmpout <- tmpout[[1]]
   }
 
-  out <- do.call(rbind.data.frame, c(tmpout, stringsAsFactors = FALSE))
-  rownames(out) <- NULL
-  colnames(out)[1] <- ""
+  out <- do.call(rbind, tmpout)
+  setnames(out, old = names(out)[1], "")
 
   return(out)
 }
-
-
 
 #' Winsorize at specified percentiles
 #'
 #' Simple function winsorizes data at the specified percentile.
 #'
-#' @param d A vector, matrix, or data frame to be winsorized
+#' @param d A vector, matrix, data frame, or data table to be winsorized
 #' @param percentile The percentile bounded by [0, 1] to winsorize data at.
 #'   If a data frame or matrix is provided for the data, this should have the
 #'   same length as the number of columns, or it will be repeated for all.
@@ -494,6 +500,19 @@ egltable <- function(vars, g, data, strict=TRUE, parametric = TRUE, simChisq = F
 #' par(mfrow = c(1, 2))
 #' hist(as.vector(eurodist), main = "Eurodist")
 #' hist(winsorizor(as.vector(eurodist), .05), main = "Eurodist with lower and upper\n5% winsorized")
+#'
+#' dat <- data.table(x = 1:5)
+#' dat[, y := scale(1:5)]
+#' winsorizor(dat$y, .01)
+#'
+#' ## make a copy of the data table
+#' winsorizor(dat, .01)
+#'
+#' winsorizor(mtcars, .01)
+#'
+#' winsorizor(matrix(1:9, 3), .01)
+#'
+#' rm(dat) # clean up
 winsorizor <- function(d, percentile, values, na.rm = TRUE) {
     if (!missing(percentile)) {
       stopifnot(percentile >= 0 && percentile <= 1)
@@ -501,7 +520,15 @@ winsorizor <- function(d, percentile, values, na.rm = TRUE) {
       percentile <- NA_real_
     }
 
-    stopifnot(is.vector(d) || is.matrix(d) || is.data.frame(d))
+  if (!is.vector(d) && !is.matrix(d) && !is.data.frame(d) && !is.data.table(d)) {
+    if (is.atomic(d) && is.null(dim(d))) {
+      warning("atomic type with no dimensions, coercing to a numeric vector. To remove this warning, try wrapping the data in as.numeric() or otherwise coercing to a vector prior to passing to winsorizor().")
+      d <- as.numeric(d)
+    }
+  }
+
+    stopifnot(is.vector(d) || is.matrix(d) || is.data.frame(d) || is.data.table(d))
+    dismatrix <- is.matrix(d)
 
     f <- function(x, percentile, values, na.rm) {
           if (!missing(values)) {
@@ -526,33 +553,435 @@ winsorizor <- function(d, percentile, values, na.rm = TRUE) {
     }
 
     if (is.vector(d)) {
-        out <- f(d, percentile = percentile, values = values, na.rm = na.rm)
-    } else if (is.matrix(d) || is.data.frame(d)) {
+        d <- f(d, percentile = percentile, values = values, na.rm = na.rm)
+    } else if (is.matrix(d) || is.data.frame(d) || is.data.table(d)) {
         if (length(percentile) == 1) {
           percentile <- rep(percentile, ncol(d))
         }
 
-        if (missing(values)) {
-          tmp <- lapply(1:ncol(d), function(i) {
-            f(d[, i], percentile = percentile[i], na.rm = na.rm)
-          })
+        if (is.data.table(d)) {
+          d <- copy(d)
+          if (missing(values)) {
+            for (i in 1:ncol(d)) {
+              v <- names(d)[i]
+              d[, (v) := f(get(v), percentile = percentile[i], na.rm = na.rm)]
+            }
+          } else {
+            for (i in 1:ncol(d)) {
+              v <- names(d)[i]
+              d[, (v) := f(get(v), percentile = percentile[i], values = values[i, ], na.rm = na.rm)]
+            }
+          }
+
+          all.attr <- do.call(rbind, lapply(1:ncol(d), function(i) attr(d[[i]], "winsorizedValues")))
+          all.attr$variable <- colnames(d)
+          rownames(all.attr) <- NULL
+
+          for (v in names(d)) {
+            d[, (v) := as.vector(get(v))]
+          }
+
         } else {
-          tmp <- lapply(1:ncol(d), function(i) {
-            f(d[, i], percentile = percentile[i], values = values[i, ], na.rm = na.rm)
-          })
+
+          if (missing(values)) {
+            tmp <- lapply(1:ncol(d), function(i) {
+              f(d[, i], percentile = percentile[i], na.rm = na.rm)
+            })
+          } else {
+            tmp <- lapply(1:ncol(d), function(i) {
+              f(d[, i], percentile = percentile[i], values = values[i, ], na.rm = na.rm)
+            })
+          }
+
+          all.attr <- do.call(rbind, lapply(tmp, function(x) attr(x, "winsorizedValues")))
+          all.attr$variable <- colnames(d)
+          rownames(all.attr) <- NULL
+          d <- as.data.frame(lapply(tmp, as.vector))
+          colnames(d) <- all.attr$variable
+
+          if (dismatrix) {
+            d <- as.matrix(d)
+          }
+
         }
 
-        all.attr <- do.call(rbind, lapply(tmp, function(x) attr(x, "winsorizedValues")))
-        all.attr$variable <- colnames(d)
-        rownames(all.attr) <- NULL
-        out <- as.data.frame(lapply(tmp, as.vector))
 
-        if (is.matrix(d)) {
-            out <- as.matrix(out)
-        }
-
-        attributes(out) <- c(attributes(d), winsorizedValues = list(all.attr))
+        attributes(d) <- c(attributes(d), winsorizedValues = list(all.attr))
     }
 
-    return(out)
+    return(d)
 }
+
+
+#' Mean decomposition of a variable by group(s)
+#'
+#' This function decomposes a variable in a long data set by grouping
+#' factors, such as by ID.
+#'
+#' @param formula A formula of the variables to be used in the analysis.
+#'   Should have the form: variable ~ groupingfactors.
+#' @param data A data table or data frame containing the variables
+#'   used in the formula.  This is a required argument.
+#' @return A list of data tables with the means or residuals
+#' @keywords multivariate
+#' @importFrom stats terms
+#' @export
+#' @examples
+#' meanDecompose(mpg ~ vs, data = mtcars)
+#' meanDecompose(mpg ~ vs + cyl, data = mtcars)
+#'
+#' ## Example plotting the results
+#' tmp <- meanDecompose(Sepal.Length ~ Species, data = iris)
+#' do.call(plot_grid, c(lapply(names(tmp), function(x) {
+#'   testdistr(tmp[[x]]$X, plot = FALSE, varlab = x)$Density
+#' }), ncol = 1))
+#'
+#' rm(tmp)
+meanDecompose <- function(formula, data) {
+  v <- as.character(attr(terms(formula), "variables"))[-1]
+
+  if (!is.data.table(data)) {
+    data <- as.data.table(data)[, v, with = FALSE]
+  } else {
+    data <- data[, v, with = FALSE]
+  }
+
+  out <- vector("list", length = length(v))
+
+  vres <- paste0(v[1], "_residual")
+  stopifnot(!any(vres %in% v))
+
+  data[, (vres) := get(v[1])]
+
+  vfinal <- vector("character", length = length(v))
+
+  for (i in 2:length(v)) {
+    vname <- paste0(v[1], "_", v[i])
+    data[, (vname) := mean(get(vres), na.rm = TRUE), by = c(v[2:i])]
+    data[, (vres) := get(vres) - get(vname)]
+    out[[i - 1]] <- data[, .(X = get(vname)[1]), by = c(v[2:i])]
+    vfinal[i - 1] <- paste0(v[1], " by ", paste(v[2:i], collapse = " & "))
+  }
+  out[[length(v)]] <- data[, .(X = get(vres))]
+  vfinal[length(v)] <- paste0(v[1], " by ", "residual")
+
+  names(out) <- vfinal
+
+  return(out)
+}
+
+# clear R CMD CHECK notes
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("vcov", "grp"))
+
+#' Intraclass Correlation Coefficient (ICC) from Mixed Models
+#'
+#' This function estimates the ICC from mixed effects models
+#' estimated using \pkg{lme4}.
+#'
+#' @param dv A character string giving the variable name of
+#'   the dependent variable.
+#' @param id A character vector of length one or more giving
+#'   the ID variable(s).  Can be more than one.
+#' @param data A data.table containing the variables
+#'   used in the formula.  This is a required argument.
+#'   If a data.frame, it will silently coerce to a data.table.
+#'   If not a data.table or data.frame, it will attempt to coerce,
+#'   with a message.
+#' @param family A character vector giving the family to use
+#'   for the model.  Currently only supports
+#'   \dQuote{gaussian} or \dQuote{binomial}.
+#' @return A data table of the ICCs
+#' @references For details, see
+#' Campbell, M. K., Mollison, J., & Grimshaw, J. M. (2001).
+#' Cluster trials in implementation research: estimation of
+#' intracluster correlation coefficients and sample size.
+#' \emph{Statistics in Medicine, 20}(3), 391-399.
+#' @keywords multivariate
+#' @importFrom lme4 lmer glmer
+#' @importFrom nlme VarCorr
+#' @importFrom stats binomial
+#' @export
+#' @examples
+#' iccMixed("mpg", "cyl", mtcars)
+#' iccMixed("mpg", "cyl", as.data.table(mtcars))
+#' iccMixed("mpg", "cyl", as.data.table(mtcars), family = "gaussian")
+#' iccMixed("mpg", c("cyl", "am"), as.data.table(mtcars))
+#' iccMixed("am", "cyl", as.data.table(mtcars), family = "binomial")
+iccMixed <- function(dv, id, data, family = c("gaussian", "binomial")) {
+  if (!is.data.table(data)) {
+    if (is.data.frame(data)) {
+      data <- as.data.table(data)
+    } else {
+      message("Attempting to coerce data to a data.table")
+      data <- as.data.table(data)
+    }
+  }
+  stopifnot(all(c(dv, id) %in% names(data)))
+  stopifnot(is.character(dv))
+  stopifnot(all(is.character(id)))
+  stopifnot(identical(length(dv), 1L))
+  stopifnot(length(id) >= 1L)
+
+  d <- copy(data[, c(dv, id), with = FALSE])
+
+  f <- sprintf("%s ~ 1 + %s", dv, paste(paste0("(1 | ", id, ")"), collapse = " + "))
+
+  family <- match.arg(family)
+
+  ## constant estimate of residual variance for logistic model
+  ## on the 'latent variable' scale
+  res.binom <- (pi^2) / 3
+
+  m <- switch(family,
+              gaussian = lmer(formula = as.formula(f), data = d, REML = TRUE),
+              binomial = glmer(formula = as.formula(f), data = d, family = binomial())
+              )
+
+  est <- as.data.table(as.data.frame(VarCorr(m)))[, .(grp, vcov)]
+
+  if (identical(family, "binomial")) {
+    est <- rbind(est, est[1])
+    est[nrow(est), c("grp", "vcov") := .("Residual", res.binom)]
+  }
+
+  est[, .(Var = grp, Sigma = vcov, ICC = vcov / sum(vcov))]
+}
+
+
+
+
+#' Estimate the effective sample size from longitudinal data
+#'
+#' This function estimates the (approximate) effective sample
+#' size.
+#'
+#' @param n The number of unique/indepedent units of observation
+#' @param k The (average) number of observations per unit
+#' @param icc The estimated ICC.  If missing, will
+#'   estimate (and requires that the family argument be
+#'   correctly specified).
+#' @param dv A character string giving the variable name of
+#'   the dependent variable.
+#' @param id A character vector of length one giving
+#'   the ID variable.
+#' @param data A data.table containing the variables
+#'   used in the formula.  This is a required argument.
+#'   If a data.frame, it will silently coerce to a data.table.
+#'   If not a data.table or data.frame, it will attempt to coerce,
+#'   with a message.
+#' @param family A character vector giving the family to use
+#'   for the model.  Currently only supports
+#'   \dQuote{gaussian} or \dQuote{binomial}.
+#' @return A data.table including the effective sample size.
+#' @references For details, see
+#' Campbell, M. K., Mollison, J., & Grimshaw, J. M. (2001).
+#' Cluster trials in implementation research: estimation of
+#' intracluster correlation coefficients and sample size.
+#' \emph{Statistics in Medicine, 20}(3), 391-399.
+#' @keywords multivariate
+#' @export
+#' @examples
+#' ## example where n, k, and icc are estimated from the data
+#' ## provided, partly using iccMixed function
+#' nEffective(dv = "mpg", id = "cyl", data = mtcars)
+#'
+#' ## example where n, k, and icc are known (or being 'set')
+#' ## useful for sensitivity analyses
+#' nEffective(n = 60, k = 10, icc = .6)
+nEffective <- function(n, k, icc, dv, id, data, family = c("gaussian", "binomial")) {
+  if (any(missing(n), missing(k), missing(icc))) {
+    if (!is.data.table(data)) {
+      if (is.data.frame(data)) {
+        data <- as.data.table(data)
+      } else {
+        message("Attempting to coerce data to a data.table")
+        data <- as.data.table(data)
+      }
+    }
+    stopifnot(all(c(dv, id) %in% names(data)))
+    stopifnot(is.character(dv))
+    stopifnot(all(is.character(id)))
+    stopifnot(identical(length(dv), 1L))
+    stopifnot(identical(length(id), 1L))
+
+    d <- copy(data[, c(dv, id), with = FALSE])
+
+    if (missing(icc)) {
+      icc <- iccMixed(dv = dv, id = id, data = data, family = family)$ICC[1]
+    }
+
+    if (missing(n)) {
+      n <- length(unique(data[[id]]))
+    }
+
+    if (missing(k)) {
+      k <- nrow(data) / n
+    }
+  }
+
+  neff <- (n * k) / ((1 + (k - 1) * icc))
+
+  data.table(
+    Type = c("Effective Sample Size", "Independent Units", "Total Observations"),
+    N = c(neff, n, n * k))
+}
+
+#' Function to calculate the mean and deviations from mean
+#'
+#' Tiny helper function to calculate the mean and
+#' deviations from the mean, both returned as a list.
+#' Works nicely with data.table to calculate a between and
+#' within variable.
+#'
+#' @param x A vector, appropriate for the \code{mean}
+#'   function.
+#' @param na.rm A logical, whether to remove missing
+#'   or not.  Defaults to \code{TRUE}.
+#' @return A list of the mean (first element) and deviations
+#'   from the mean (second element).
+#' @export
+#' @examples
+#' ## simple example showing what it does
+#' meanDeviations(1:10)
+#'
+#' ## example use case, applied to a data.table
+#' d <- as.data.table(iris)
+#' d[, c("BSepal.Length", "WSepal.Length") := meanDeviations(Sepal.Length),
+#'   by = Species]
+#' str(d)
+meanDeviations <- function(x, na.rm = TRUE) {
+  m <- mean(x, na.rm = na.rm)
+  list(m, x - m)
+}
+
+
+#' Calculate a rounded five number summary
+#'
+#' Numbers are the minimum, 25th percentile, median,
+#' 75th percentile, and maximum, of the non missing data.
+#' Values returned are either the significant digits or rounded values,
+#' whichever ends up resulting in the fewest total digits.
+#'
+#' @param x The data to have the summary calculated on
+#' @param round The number of digits to try rounding
+#' @param sig The number of significant digits to try
+#' @return The rounded or significant digit five number summary
+#' @importFrom stats fivenum
+#' @examples
+#' JWileymisc:::roundedfivenum(rnorm(1000))
+#' JWileymisc:::roundedfivenum(mtcars$hp)
+roundedfivenum <- function(x, round = 2, sig = 3) {
+  x <- fivenum(x[!is.na(x)])
+  if(max(nchar(signif(x, sig))) < max(nchar(round(x, round)))) {
+    signif(x, sig)
+  } else {
+    round(x, round)
+  }
+}
+
+
+#' Estimate the effective sample size from longitudinal data
+#'
+#' This function estimates the (approximate) effective sample
+#' size.
+#'
+#' @param xvar A character string giving the variable name of
+#'   the variable to calculate autocorrelations on.
+#' @param timevar A character string giving the variable name of
+#'   the time variable.
+#' @param idvar A character string giving the variable name of
+#'   the ID variable.  Can be missing if only one time series
+#'   provided, in which case one will be created.
+#' @param data A data.table containing the variables
+#'   used in the formula.  This is a required argument.
+#'   If a data.frame, it will silently coerce to a data.table.
+#'   If not a data.table or data.frame, it will attempt to coerce,
+#'   with a message.
+#' @param lag.max An integer of the maximum lag to estimate. Must be
+#'   equal to or greater than the number of observations
+#'   for all IDs in the dataset.
+#' @param na.function A character string giving the name of the function
+#'   to use to address any missing data.  Functions come from the
+#'   \pkg{zoo} package, and must be one of:
+#'   \dQuote{na.approx}, \dQuote{na.spline}, \dQuote{na.locf}.
+#' @param ... Additional arguments passed to \code{zoo}.
+#' @return A data.table of the estimated autocorrelations by ID and lag
+#' @references For details, see
+#' Campbell, M. K., Mollison, J., & Grimshaw, J. M. (2001).
+#' Cluster trials in implementation research: estimation of
+#' intracluster correlation coefficients and sample size.
+#' \emph{Statistics in Medicine, 20}(3), 391-399.
+#' @keywords multivariate
+#' @importFrom zoo zoo na.approx na.spline na.locf
+#' @importFrom stats acf
+#' @export
+#' @examples
+#' ## example 1
+#' dat <- data.table(
+#'   x = sin(1:30),
+#'   time = 1:30,
+#'   id = 1)
+#' acfByID("x", "time", "id", data = dat)
+#'
+#' ## example 2
+#' dat2 <- data.table(
+#'   x = c(sin(1:30), sin((1:30)/10)),
+#'   time = c(1:30, 1:30),
+#'   id = rep(1:2, each = 30))
+#' dat2$x[4] <- NA
+#'
+#' res <- acfByID("x", "time", "id", data = dat2, na.function = "na.approx")
+#'
+#' ggplot(res, aes(factor(Lag), AutoCorrelation)) +
+#'   geom_boxplot()
+#'
+#' ## clean up
+#' rm(dat, dat2, res)
+acfByID <- function(xvar, timevar, idvar, data, lag.max = 10L, na.function = c("na.approx", "na.spline", "na.locf"), ...) {
+  if (!is.data.table(data)) {
+    if (is.data.frame(data)) {
+      data <- as.data.table(data)
+    } else {
+      message("Attempting to coerce data to a data.table")
+      data <- as.data.table(data)
+    }
+  }
+
+  stopifnot(is.integer(lag.max))
+  stopifnot(is.character(xvar))
+  stopifnot(is.character(timevar))
+
+  stopifnot(all(c(xvar, timevar) %in% names(data)))
+  stopifnot(identical(length(xvar), 1L))
+  stopifnot(identical(length(timevar), 1L))
+
+  na.function <- match.arg(na.function)
+  na.function <- switch(na.function,
+                        na.approx = na.approx,
+                        na.spline = na.spline,
+                        na.locf = na.locf)
+
+  if (!missing(idvar)) {
+    stopifnot(is.character(idvar))
+    stopifnot(idvar %in% names(data))
+    stopifnot(identical(length(idvar), 1L))
+
+    d <- copy(data[, c(xvar, timevar, idvar), with = FALSE])
+  } else {
+    d <- copy(data[, c(xvar, timevar), with = FALSE])
+    idvar <- "ID"
+    while(idvar %in% names(d)) {
+      idvar <- paste0("TMP_", idvar)
+    }
+    d[, (idvar) := 1L]
+  }
+
+
+  d[, .(
+    Variable = xvar,
+    Lag = 0:lag.max,
+    AutoCorrelation = acf(na.function(zoo(get(xvar), order.by = get(timevar))),
+                          lag.max = lag.max, plot = FALSE, ...)$acf[, 1, 1]),
+    by = idvar]
+}
+

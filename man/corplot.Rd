@@ -4,8 +4,9 @@
 \alias{corplot}
 \title{Heatmap of a Correlation Matrix}
 \usage{
-corplot(x, coverage, pvalues, plot = c("cor", "p", "coverage"), digits = 2,
-  order = c("cluster", "asis"), ..., control.grobs = list())
+corplot(x, coverage, pvalues, plot = c("cor", "p", "coverage"),
+  digits = 2, order = c("cluster", "asis"), ...,
+  control.grobs = list())
 }
 \arguments{
 \item{x}{A correlation matrix or some other square symmetric matrix.}
@@ -34,11 +35,11 @@ plot. Defaults to \sQuote{cluster} which uses hierarchical clustering
 to sensibly order the variables. The other option is \sQuote{asis}
 in which case the matrix is plotted in the order it is passed.}
 
-\item{control.grobs}{A list of additional \code{quote()}d
-options to customize the \code{ggplot2} output.}
-
 \item{\dots}{Additional arguments currently only passed to
 \code{hclust} and \code{corOK}.}
+
+\item{control.grobs}{A list of additional \code{quote()}d
+options to customize the \code{ggplot2} output.}
 }
 \value{
 Primarily called for the side effect of creating a plot.
@@ -76,11 +77,11 @@ sdat <- SEMSummary(~ ., data = dat)
 # using the plot method for SEMSummary (which basically just calls corplot)
 plot(sdat)
 
-# getting p values instaed of coverage
-plot(sdat, plot = "p")
+## getting p values instaed of coverage
+# plot(sdat, plot = "p")
 
-# showing correlations instead of coverage
-plot(sdat, plot = "cor")
+## showing correlations instead of coverage
+# plot(sdat, plot = "cor")
 
 # use the control.grobs argument to adjust the coverage scaling
 # to go from 0 to 1 rather than the range of coverage
@@ -94,4 +95,3 @@ plot(x = sdat, control.grobs = list(area = quote(scale_size_area(limits = c(0, 1
 rm(dat, sdat)
 }
 \keyword{hplot}
-

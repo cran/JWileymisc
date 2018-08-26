@@ -383,8 +383,10 @@ param_summary_format <- function(d, digits = getOption("digits"), pretty = FALSE
 #'
 #' @param x A \code{htest} class object
 #' @param type The type of htest. Currently one of: \dQuote{t}, \dQuote{F}, \dQuote{chisq},
-#'   \dQuote{kw}, or \dQuote{mh} for t-tests, F-tests, chi-square tests, kruskal-wallis tests,
-#'   and Mantel-Haenszel tests, respectively.
+#'   \dQuote{kw}, \dQuote{mh}, \dQuote{r_pearson}, \dQuote{r_kendall}, or \dQuote{r_spearman}
+#'   for t-tests, F-tests, chi-square tests, kruskal-wallis tests,
+#'   Mantel-Haenszel tests, pearson correlations, kendall tau correlation,
+#'   and spearman rho correlation, respectively.
 #' @param \dots Arguments passed on to p-value formatting
 #' @return A character string with results
 #' @keywords misc
@@ -395,29 +397,45 @@ param_summary_format <- function(d, digits = getOption("digits"), pretty = FALSE
 #' formatHtest(chisq.test(c(A = 20, B = 15, C = 25)), type = "chisq")
 #' formatHtest(kruskal.test(Ozone ~ Month, data = airquality))
 #' formatHtest(mantelhaen.test(UCBAdmissions), type = "mh")
-formatHtest <- function(x, type = c("t", "F", "chisq", "kw", "mh"), ...) {
+#' formatHtest(cor.test(~ mpg + hp, data = mtcars, method = "pearson"), type = "r_pearson")
+#' formatHtest(cor.test(~ mpg + hp, data = mtcars, method = "kendall"), type = "r_kendall")
+#' formatHtest(cor.test(~ mpg + hp, data = mtcars, method = "spearman"), type = "r_spearman")
+formatHtest <- function(x, type = c("t", "F", "chisq", "kw", "mh", "r_pearson", "r_kendall", "r_spearman"), ...) {
   type <- match.arg(type)
 
   switch(type,
-         t = sprintf("t = %0.2f, df = %s, %s",
-                     x$statistic,
+         r_pearson = sprintf("r = %0.2f, CI = (%0.2f, %0.2f), t(df = %s) = %0.2f, %s",
+                     x$estimate, x$conf.int[1], x$conf.int[2],
                      as.character(round(x$parameter, 2)),
+                     x$statistic,
+                     formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
+         r_kendall = sprintf("tau = %0.2f, z = %0.2f, %s",
+                     x$estimate,
+                     x$statistic,
+                     formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
+         r_spearman = sprintf("rho = %0.2f, S = %0.1f, %s",
+                     x$estimate,
+                     x$statistic,
+                     formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
+         t = sprintf("t(df = %s) = %0.2f, %s",
+                     as.character(round(x$parameter, 2)),
+                     x$statistic,
                      formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
          F = sprintf("F(%s, %s) = %0.2f, p-value = %s",
                      as.character(round(x[1, "Df"], 2)),
                      as.character(round(x[2, "Df"], 2)),
                      x[1, "F value"],
                      formatPval(x[1, "Pr(>F)"], includeP = TRUE, includeSign = TRUE, ...)),
-         chisq = sprintf("Chi-square = %s, df = %d, %s",
-                         as.character(round(x$statistic, 2)),
+         chisq = sprintf("Chi-square(df = %d) = %s, %s",
                          x$parameter,
+                         as.character(round(x$statistic, 2)),
                          formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
-         kw = sprintf("Kruskal-Wallis chi-square = %s, df = %d, %s",
-                      as.character(round(x$statistic, 2)),
+         kw = sprintf("Kruskal-Wallis chi-square(df = %d) = %s, %s",
                       x$parameter,
+                      as.character(round(x$statistic, 2)),
                       formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...)),
-         mh = sprintf("Mantel-Haenszel chi-square = %0.2f, df = %d, %s, common odds ratio = %0.2f, CI = (%0.2f, %0.2f).",
-                      x$statistic, x$parameter,
+         mh = sprintf("Mantel-Haenszel chi-square(df = %d) = %0.2f, %s, common odds ratio = %0.2f, CI = (%0.2f, %0.2f).",
+                      x$parameter, x$statistic,
                       formatPval(x$p.value, includeP = TRUE, includeSign = TRUE, ...),
                       x$estimate, x$conf.int[1], x$conf.int[2]))
 }
@@ -457,3 +475,178 @@ f.r2 <- function(r2, numdf, dendf) {
 }
 
 
+# clear R CMD CHECK notes
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("ID", "V2", "V1",
+                                                        "value", "Est", "Pval",
+                                                        "Variable", "Type",
+                                                        "MarginalF2", "ConditionalF2"))
+
+#' Format results from a linear mixed model
+#'
+#' @param list A list of one (or more) models estimated from lmer
+#' @param modelnames An (optional) vector of names to use in
+#'   the column headings for each model.
+#' @param format A list giving the formatting style to be used for
+#'   the fixed effecvts, random effects, and effect sizes.
+#'   For the random effects, must be two options, one for when the
+#'   random effects do not have confidence intervals and one when the
+#'   random effects do have confidence intervals.
+#' @param digits A numeric value indicating the number of digits to print.
+#'   This is still in early implementation stages and currently does not
+#'   change all parts of the output (which default to 2 decimals per
+#'   APA style).
+#' @param pcontrol A list controlling how p values are formatted.
+#' @param \ldots Additional arguments passed to \code{confint}. Notably
+#'   \code{nsim} and \code{boot.type} if the bootstrap method is used.
+#' @return a data table of character data
+#' @keywords misc
+#' @export
+#' @importFrom stats pnorm
+#' @importFrom nlme fixef
+#' @examples
+#'
+#' \dontrun{
+#' data(sleepstudy)
+#' m1 <- lme4::lmer(Reaction ~ Days + (1 + Days | Subject),
+#'   data = sleepstudy)
+#' m2 <- lme4::lmer(Reaction ~ Days + I(Days^2) + (1 + Days | Subject),
+#'   data = sleepstudy)
+#'
+#' testm1 <- detailedTests(m1, method = "profile")
+#' testm2 <- detailedTests(m2, method = "profile")
+#' formatLMER(list(testm1, testm2))
+#' formatLMER(list(testm1, testm2),
+#'   format = list(
+#'     FixedEffects = "%s, %s (%s, %s)",
+#'     RandomEffects = c("%s", "%s (%s, %s)"),
+#'     EffectSizes = "%s, %s; %s"),
+#'   pcontrol = list(digits = 3, stars = FALSE,
+#'                   includeP = TRUE, includeSign = TRUE,
+#'                   dropLeadingZero = TRUE))
+#' }
+formatLMER <- function(list, modelnames,
+                       format = list(
+                         FixedEffects = c("%s%s [%s, %s]"),
+                         RandomEffects = c("%s", "%s [%s, %s]"),
+                         EffectSizes = c("%s/%s, %s")),
+                       digits = 2,
+  pcontrol = list(digits = 3, stars = TRUE, includeP = FALSE, includeSign = FALSE,
+                  dropLeadingZero = TRUE),
+  ...) {
+
+  formround <- function(x, digits) {
+    format(round(x, digits = digits), digits = digits, nsmall = digits)
+  }
+
+  .formatRE <- function(x, digits) {
+    tmp <- copy(x[, .(
+      Term = Term,
+      Est = formround(Est, digits = digits),
+      LL = ifelse(is.na(LL), "", formround(LL, digits = digits)),
+      UL = ifelse(is.na(UL), "", formround(UL, digits = digits)))])
+    tmp[, .(
+      Term = Term,
+      Est = ifelse(nzchar(LL) & nzchar(UL),
+                   sprintf(format$RandomEffects[2], Est, LL, UL),
+                   sprintf(format$RandomEffects[1], Est)))]
+    }
+
+  .formatFE <- function(x, digits) {
+    tmp <- copy(x[, .(
+      Term = Term,
+      Est = formround(Est, digits = digits),
+      LL = ifelse(is.na(LL), "", formround(LL, digits = digits)),
+      UL = ifelse(is.na(LL), "", formround(LL, digits = digits)),
+      P = if (pcontrol$stars) {
+            star(Pval)
+          } else {
+            formatPval(Pval,
+                       d = pcontrol$digits,
+                       sd = pcontrol$digits,
+                       includeP = pcontrol$includeP,
+                       includeSign = pcontrol$includeSign,
+                       dropLeadingZero = pcontrol$dropLeadingZero)
+          })])
+    tmp[, .(
+      Term = Term,
+      Est = sprintf(format$FixedEffects, Est, P, LL, UL))]
+    }
+  .formatMISC <- function(x, digits) {
+    ngrps <- gsub("^N_(.*)$", "\\1",
+                  grep("^N_.*$", names(x), value = TRUE)) %snin% "Obs"
+    data.table(
+      Term = c(
+        "Model DF",
+        sprintf("N (%s)", ngrps),
+        "N (Observations)",
+        "logLik",
+        "AIC",
+        "BIC",
+        "Marginal R2",
+        "Conditional R2"),
+      Est = c(
+        as.character(x$DF),
+        as.character(unlist(x[, paste0("N_", ngrps), with = FALSE])),
+        as.character(x$N_Obs),
+        formround(x$logLik, digits = digits),
+        formround(x$AIC, digits = digits),
+        formround(x$BIC, digits = digits),
+        formround(x$MarginalR2, digits = digits),
+        formround(x$ConditionalR2, digits = digits)))
+  }
+
+  .formatEFFECT <- function(x, digits) {
+    copy(x[, .(
+      Term = sprintf("%s (%s)", Variable, Type),
+      Est = sprintf(format$EffectSizes,
+                    formround(MarginalF2, digits = digits),
+                    formround(ConditionalF2, digits = digits),
+                    formatPval(P, d = pcontrol$digits, sd = pcontrol$digits,
+                              includeP = TRUE, includeSign = TRUE)))])
+  }
+
+
+
+  k <- length(list)
+  if (missing(modelnames)) {
+    modelnames <- paste0("Model ", 1:k)
+  }
+
+  mergeIt <- function(z, func, term) {
+    res <- lapply(z, function(mod) func(mod[[term]], digits = digits))
+    for (i in 1:k) {
+      setnames(res[[i]], old = "Est", new = modelnames[i])
+    }
+
+    if (k == 1) {
+      final <- res[[1]]
+    } else if (k > 1) {
+      final <- merge(res[[1]], res[[2]], by = "Term", all = TRUE)
+    } else if (k > 2) {
+      for (i in 3:k) {
+        final <- merge(final, res[[i]], by = "Term", all = TRUE)
+      }
+    }
+    return(final)
+  }
+
+  final.fe <- mergeIt(list, .formatFE, "FixedEffects")
+  final.re <- mergeIt(list, .formatRE, "RandomEffects")
+  final.misc <- mergeIt(list, .formatMISC, "OverallModel")
+  final.ef <- mergeIt(list, .formatEFFECT, "EffectSizes")
+
+  placeholder <- final.fe[1]
+  for (i in names(placeholder)) {
+    placeholder[, (i) := ""]
+  }
+  place.fe <- copy(placeholder)[, Term := "Fixed Effects"]
+  place.re <- copy(placeholder)[, Term := "Random Effects"]
+  place.misc <- copy(placeholder)[, Term := "Overall Model"]
+  place.ef <- copy(placeholder)[, Term := "Effect Sizes"]
+
+  rbind(
+    place.fe, final.fe,
+    place.re, final.re,
+    place.misc, final.misc,
+    place.ef, final.ef)
+}

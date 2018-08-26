@@ -2,9 +2,9 @@
 % Please edit documentation in R/descriptives.R
 \name{egltable}
 \alias{egltable}
-\title{EGL Table function makes nice tables}
+\title{Function makes nice tables}
 \usage{
-egltable(vars, g, data, strict = TRUE, parametric = TRUE,
+egltable(vars, g, idvar, data, strict = TRUE, parametric = TRUE,
   simChisq = FALSE, sims = 1e+06)
 }
 \arguments{
@@ -14,6 +14,10 @@ or the data to be described itself.}
 
 \item{g}{A variable used tou group/separate the data prior
 to calculating descriptive statistics.}
+
+\item{idvar}{A character string indicating the variable name
+of the ID variable.  Not currently used, but will eventually
+support \code{egltable} supporting repeated measures data.}
 
 \item{data}{optional argument of the dataset containing
 the variables to be described.}
@@ -43,7 +47,8 @@ A data frame of the table.
 \description{
 Give a dataset and a list of variables, or just the data
 in the vars.  For best results, convert categorical
-variables into factors.
+variables into factors.  Provides a table of estimated descriptive
+statistics optionally by group levels.
 }
 \examples{
 egltable(iris)
@@ -55,6 +60,8 @@ egltable(colnames(iris)[1:4], "Species", iris,
   parametric = c(TRUE, TRUE, FALSE, FALSE))
 egltable(colnames(iris)[1:4], "Species", iris,
   parametric = c(TRUE, TRUE, FALSE, FALSE), simChisq=TRUE)
+
+diris <- as.data.table(iris)
+egltable("Sepal.Length", g = "Species", data = diris)
 }
 \keyword{utils}
-

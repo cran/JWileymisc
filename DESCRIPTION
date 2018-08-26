@@ -1,8 +1,8 @@
 Package: JWileymisc
 Type: Package
 Title: Miscellaneous Utilities and Functions
-Version: 0.2.1
-Date: 2016-09-01
+Version: 0.3.0
+Date: 2018-08-26
 Author: Joshua F. Wiley <jwiley.psych@gmail.com>
 Maintainer: Joshua F. Wiley <jwiley.psych@gmail.com>
 URL: https://github.com/JWiley/JWileymisc
@@ -12,13 +12,15 @@ Description: A collection of miscellaneous tools and functions,
     format output, visualize relations among variables or check
     distributions.
 License: GPL (>= 3)
-Depends: R (>= 3.2.0), data.table (>= 1.9.6), ggplot2 (>= 2.0.0),
+Depends: R (>= 3.2.0), data.table (>= 1.10.0), ggplot2 (>= 2.2.0),
         cowplot, foreach
-Imports: stats, utils, MASS, Hmisc, multcompView, devtools, graphics,
-        mgcv, plyr, mice, lavaan (>= 0.5-20)
+Imports: stats, utils, MASS, multcomp, multcompView, lsmeans, devtools,
+        graphics, ggthemes, mgcv, mice, methods, zoo, psych, rms,
+        robustbase, quantreg, lavaan (>= 0.5-20), VGAM, nlme, Matrix,
+        lme4, lmerTest
 Suggests: scales, testthat
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.0
 NeedsCompilation: no
-Packaged: 2016-09-01 06:21:59 UTC; jwile
+Packaged: 2018-08-26 05:23:11 UTC; jwile
 Repository: CRAN
-Date/Publication: 2016-09-01 08:41:49
+Date/Publication: 2018-08-26 05:54:24 UTC
