@@ -1,3 +1,43 @@
+# JWileymisc 1.0.0
+
+## Changes
+
+* This version includes a significant re-write of the package that 
+  results in many of the previous user-facing functions changing 
+  names and arguments. This will likely break old code.
+  This re-write was necessary to help standardize functions and
+  arguments, and to make functions more robust.
+  Many functions are now generics with specific methods written.
+  Further, some functions previously bundled into `JWileymisc` have 
+  been separated into other packages, including the new 
+  `extraoperators` package, covering binary operators, 
+  and a package for diagnostics on mixed models. See the new vignettes 
+  added to the package for examples of current practice in using
+  `JWileymisc`.
+
+## New Features
+* `egltable()` has added statistical tests for paired data. For
+  continuous, parametric paired data, a pseudo Cohen's d is calculated
+  on the change scores.
+
+# JWileymisc 0.3.2
+
+## New Features
+* `omegaSEM()` Function that calculates coefficient omega for 
+  measuring internal consistency reliability. Works for two 
+  level models and returns within and between level omega 
+  values.
+
+* `egltable()` Function has added effect sizes when multiple groups
+  are compared including Cohen's d for two groups, eta-squared for
+  multiple groups, and phi for categorical variables.
+
+## Bug Fixes
+* `testdistr()` now only finds extreme values for the right tail of a 
+   chi-square distribution.
+* `.detailedTestsVGLM()` now identifies levels of the outcome
+  correctly.
+
 # JWileymisc 0.3.1
 
 ## Changes
