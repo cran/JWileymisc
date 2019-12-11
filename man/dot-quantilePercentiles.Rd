@@ -4,7 +4,7 @@
 \alias{.quantilePercentiles}
 \title{Internal Function to Calculate Quantiles}
 \usage{
-.quantilePercentiles(data, LL = 0.1, UL = 0.9)
+.quantilePercentiles(data, LL = 0.1, UL = 0.9, na.rm = TRUE)
 }
 \arguments{
 \item{data}{A dataset of predicted and residual values.
@@ -15,6 +15,9 @@ Assumed from some sort of (probably parametric) model.}
 
 \item{UL}{The upper limit for prediction. Defaults to
 \code{.9} to give the 90th percentile.}
+
+\item{na.rm}{A logical whether to remove missing values.
+Defaults to \code{TRUE}}
 }
 \value{
 A data.table with the scores and predicted LL and UL,
@@ -25,4 +28,5 @@ A data.table with the scores and predicted LL and UL,
 Function calculates smoothing spline quantiles
 or linear quantiles as a fall back. Not intended for general use.
 Expected predicted and residual data.
+Exported to support related packages.
 }
