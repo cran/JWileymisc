@@ -1,21 +1,21 @@
-## ---- include = FALSE----------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 
-## ----setup---------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(JWileymisc)
 library(ggplot2)
 library(data.table)
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  
 #  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
 #           data = mtcars)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
           egltable(c("mpg", "hp", "qsec", "wt", "vs"),
@@ -24,13 +24,13 @@ pander::pandoc.table(
           justify = "left")
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  
 #  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
 #           data = mtcars, strict=FALSE)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
           egltable(c("mpg", "hp", "qsec", "wt", "vs"),
@@ -39,13 +39,13 @@ pander::pandoc.table(
           justify = "left")
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  
 #  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
 #    g = "am", data = mtcars, strict = FALSE)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
           egltable(c("mpg", "hp", "qsec", "wt", "vs"), 
@@ -54,14 +54,14 @@ pander::pandoc.table(
           justify = "left")
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  
 #  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
 #           g = "am", data = mtcars, strict = FALSE,
 #           parametric = FALSE)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
           egltable(c("mpg", "hp", "qsec", "wt", "vs"), 
@@ -71,7 +71,7 @@ pander::pandoc.table(
           justify = "left")
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  ## example with paired data
 #  egltable(
 #    vars = "extra",
@@ -81,7 +81,7 @@ pander::pandoc.table(
 #    paired = TRUE)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
 egltable(
@@ -94,7 +94,7 @@ caption = "Example parametric descriptive statistics for paired data.",
 justify = "left")
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  egltable(
 #    vars = "extra",
 #    g = "group",
@@ -104,7 +104,7 @@ justify = "left")
 #    parametric = FALSE)
 #  
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
 egltable(
@@ -118,7 +118,7 @@ caption = "Example non parametric descriptive statistics for paired data.",
 justify = "left")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 ## paired categorical data example
 ## using data on chick weights to create categorical data
@@ -128,12 +128,12 @@ tmp$WeightTertile <- cut(tmp$weight,
   include.lowest = TRUE)
 
 
-## ---- eval = FALSE, echo = TRUE, results = "hide"------------------------
+## ---- eval = FALSE, echo = TRUE, results = "hide"-----------------------------
 #  egltable(c("weight", "WeightTertile"), g = "Time",
 #    data = tmp,
 #    idvar = "Chick", paired = TRUE)
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
 egltable(c("weight", "WeightTertile"), g = "Time",
@@ -143,14 +143,14 @@ caption = "Continuous and categorical paired data.",
 justify = "left")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 m <- SEMSummary(~ mpg + hp + qsec + wt, data = mtcars)
 
 corTab <- APAStyler(m, type = "cor", stars = TRUE)
 
 
-## ---- echo = FALSE, results = "asis"-------------------------------------
+## ---- echo = FALSE, results = "asis"------------------------------------------
 
 pander::pandoc.table(
           corTab$table,
@@ -158,7 +158,7 @@ pander::pandoc.table(
           justify = "left")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 plot(m, type = "cor") +
   ggtitle("Order by hierarchical clustering")
@@ -167,13 +167,13 @@ plot(m, type = "cor", order = "asis") +
   ggtitle("Order as written")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 plot(m, type = "p") +
   ggtitle("Numbers are p-values")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 mg <- SEMSummary(~ Sepal.Length + Petal.Length +
                   Sepal.Width + Petal.Width | Species,
@@ -182,7 +182,7 @@ mg <- SEMSummary(~ Sepal.Length + Petal.Length +
 plot(mg)
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 ## simulate some likert style data
 set.seed(1234)
@@ -209,7 +209,7 @@ gglikert("Mean", "variable", "Low", "High", data = dmeans,
          title = "Average Affect Ratings")
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 ## create a grouping variable
 dg <- cbind(d, Group = ifelse(
