@@ -33,3 +33,10 @@ print(mt)
 APAStyler(mt)
 
 
+## -----------------------------------------------------------------------------
+
+m2 <- stats::lm(mpg ~ hp * cyl, data = mtcars)
+
+APAStyler(modelTest(m2))
+
+

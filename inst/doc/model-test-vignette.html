@@ -8,31 +8,43 @@
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Joshua F. Wiley" />
 
-<meta name="date" content="2020-01-23" />
+<meta name="date" content="2020-04-28" />
 
 <title>Model Performance and Tests</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -52,7 +64,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -119,9 +131,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -290,7 +299,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -305,7 +315,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Model Performance and Tests</h1>
 <h4 class="author">Joshua F. Wiley</h4>
-<h4 class="date">2020-01-23</h4>
+<h4 class="date">2020-04-28</h4>
 
 
 
@@ -399,6 +409,29 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; 12:           Adj R2                     0.73 Overall Model</span></span>
 <span id="cb5-16"><a href="#cb5-16"></a><span class="co">#&gt; 13:               hp      f2 = 0.09, p = .130  Effect Sizes</span></span>
 <span id="cb5-17"><a href="#cb5-17"></a><span class="co">#&gt; 14:              cyl      f2 = 0.62, p = .001  Effect Sizes</span></span></code></pre></div>
+<p>The model tests can also be used with interactions.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2"></a>m2 &lt;-<span class="st"> </span>stats<span class="op">::</span><span class="kw">lm</span>(mpg <span class="op">~</span><span class="st"> </span>hp <span class="op">*</span><span class="st"> </span>cyl, <span class="dt">data =</span> mtcars)</span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="kw">APAStyler</span>(<span class="kw">modelTest</span>(m2))</span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;                 Term                       Est          Type</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  1:      (Intercept)  35.98*** [ 27.99, 43.98] Fixed Effects</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  2:               hp    -0.11* [ -0.21, -0.02] Fixed Effects</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  3:             cyl6   -15.31* [-30.59, -0.03] Fixed Effects</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  4:             cyl8  -17.90** [-28.71, -7.09] Fixed Effects</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  5:          hp:cyl6      0.11 [ -0.04,  0.25] Fixed Effects</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  6:          hp:cyl8      0.10 [  0.00,  0.20] Fixed Effects</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  7: N (Observations)                        32 Overall Model</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  8:        logLik DF                         7 Overall Model</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt;  9:           logLik                    -77.54 Overall Model</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; 10:              AIC                    169.08 Overall Model</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt; 11:              BIC                    179.34 Overall Model</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt; 12:               F2                      3.72 Overall Model</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt; 13:               R2                      0.79 Overall Model</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt; 14:           Adj R2                      0.75 Overall Model</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt; 15:               hp       f2 = 0.23, p = .021  Effect Sizes</span></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt; 16:              cyl       f2 = 0.47, p = .007  Effect Sizes</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt; 17:           hp:cyl       f2 = 0.16, p = .142  Effect Sizes</span></span></code></pre></div>
 </div>
 
 
