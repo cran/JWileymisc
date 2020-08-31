@@ -160,10 +160,10 @@ pander::pandoc.table(
 
 ## -----------------------------------------------------------------------------
 
-plot(m, type = "cor") +
+plot(m) +
   ggtitle("Order by hierarchical clustering")
 
-plot(m, type = "cor", order = "asis") +
+plot(m, order = "asis") +
   ggtitle("Order as written")
 
 

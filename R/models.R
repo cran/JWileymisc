@@ -478,7 +478,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("Model", "Type"))
 #' @param subset subset
 #' @param weights any weights
 #' @param na.action Defaults to \code{na.omit}
-#' @param method defaults to \dQuote{qr}
 #' @param model defaults to \code{TRUE}
 #' @param x defaults to \code{FALSE}
 #' @param y defaults to \code{FALSE}
@@ -505,7 +504,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("Model", "Type"))
 #' anova(m, m2)
 #'
 #' rm(m, m2, x, y)
-lm2 <- function (formula, data, subset, weights, na.action, method = "qr",
+lm2 <- function (formula, data, subset, weights, na.action,## method = "qr",
     model = TRUE, x = FALSE, y = FALSE, qr = TRUE, singular.ok = TRUE,
     contrasts = NULL, offset, designMatrix, yObserved, ...) {
     ret.x <- x
@@ -518,11 +517,13 @@ lm2 <- function (formula, data, subset, weights, na.action, method = "qr",
     mf$drop.unused.levels <- TRUE
     mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
-    if (method == "model.frame")
-        return(mf)
-    else if (method != "qr")
-        warning(gettextf("method = '%s' is not supported. Using 'qr'",
-            method), domain = NA)
+    ## ## currently removed as not applicable for current use
+    ## ## but may be needed if modelTest() ever expands / changes
+    ## if (method == "model.frame")
+    ##     return(mf)
+    ## else if (method != "qr")
+    ##     warning(gettextf("method = '%s' is not supported. Using 'qr'",
+    ##         method), domain = NA)
     mt <- attr(mf, "terms")
     y <- yObserved
     w <- as.vector(model.weights(mf))
@@ -818,7 +819,7 @@ if(getRversion() >= "2.15.1") {
 ##' @importFrom ggplot2 ggplot geom_text aes scale_x_continuous theme xlab ylab coord_fixed
 ##' @importFrom ggplot2 element_blank unit geom_line geom_ribbon aes_string geom_segment
 ##' @importFrom grid arrow
-##' @importFrom cowplot theme_cowplot
+##' @importFrom ggpubr theme_pubr
 ##' @examples
 ##' ## make me
 intSigRegGraph <- function(object, predList, contrastList, xvar, varyvar,
@@ -918,7 +919,7 @@ intSigRegGraph <- function(object, predList, contrastList, xvar, varyvar,
     geom_text(aes(x = xz, y = yz + ', (.05 * diff(ylim)), ', label = reglab, angle = ContrastAngleZ),
               data = simpleSlopes, hjust = ', use.xmax, ') +
     scale_x_continuous(breaks = ', deparse(xbreaks), ', labels = ', deparse(xlabels), ') +
-    theme_cowplot() +
+    theme_ggpubr() +
     theme(
       legend.key.width = unit(2, "cm"),
       legend.title = element_blank(),
@@ -941,29 +942,6 @@ intSigRegGraph <- function(object, predList, contrastList, xvar, varyvar,
   }
 
   p <- with(finalOut, eval(parse(text = p.code)))
-
-  ## p <- ggplot(finalOut$Predictions, aes(xz, y = yhat)) +
-  ##   geom_ribbon(aes_string(ymin = "lower", ymax = "upper", group = varyvar), alpha = .1) +
-  ##   geom_line(aes_string(linetype = varyvar), size = 2) +
-  ##   geom_text(aes(x = xz, y = yz + (.05 * diff(ylim)), label = reglab, angle = ContrastAngleZ),
-  ##             data = simpleSlopes, hjust = use.xmax) +
-  ##   scale_x_continuous(breaks = xbreaks, labels = xlabels) +
-  ##   theme_cowplot() +
-  ##   theme(
-  ##     legend.key.width = unit(2, "cm"),
-  ##     legend.title = element_blank(),
-  ##     legend.position = "bottom") +
-  ##   xlab(xlab) +
-  ##   ylab(ylab) +
-  ##   coord_fixed(ratio = ratio,
-  ##               xlim = xlim,
-  ##               ylim = ylim,
-  ##               expand = FALSE)
-  ## if (anysig) {
-  ##   for (i in length(arrow.geoms)) {
-  ##     p <- p + arrow.geoms[[i]]
-  ##   }
-  ## }
 
   finalOut$Graph <- p
   finalOut$GraphCode <- p.code

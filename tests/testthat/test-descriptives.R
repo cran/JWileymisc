@@ -26,6 +26,18 @@ test_that("meanCircular works", {
     meanCircular(c(23, 1, NA), max = 24, na.rm = TRUE),
     0)
   expect_equivalent(
+    meanCircular(1:3, max = 24, na.rm = TRUE),
+    2)
+  expect_equivalent(
+    meanCircular(21:23, max = 24, na.rm = TRUE),
+    22)
+  expect_equivalent(
+    meanCircular(c(6, 21), max = 24),
+    1.5)
+  expect_equivalent(
+    meanCircular(c(6, 23), max = 24),
+    2.5)
+  expect_equivalent(
     meanCircular(c(NA_real_), max = 24, na.rm = TRUE),
     NA_real_)
   expect_equivalent(
@@ -34,6 +46,9 @@ test_that("meanCircular works", {
   expect_equivalent(
     meanCircular(24, max = 24),
     0)
+  expect_equivalent(
+    meanCircular(c(355, 5, 15), max = 360),
+    5)
   expect_error(meanCircular("a"))
   expect_error(meanCircular(99, max = 24))
   expect_error(meanCircular(-1, max = 24))
@@ -134,6 +149,32 @@ test_that("egltable works", {
   expect_equal(dim(t13), c(3L, 5L))
 
 
+  tmp <- subset(ChickWeight, Time %in% c(0, 20))
+  tmp$WeightTertile <- cut(tmp$weight,
+                           breaks = quantile(tmp$weight, c(0, 1/3, 2/3, 1), na.rm = TRUE),
+                           include.lowest = TRUE)
+  t14 <- egltable(c("weight", "WeightTertile"), g = "Time",
+                  data = tmp,
+                  idvar = "Chick", paired = TRUE)
+
+  expect_is(t14, "data.table")
+  expect_true(any(grepl("McNemar", t14$Test)))
+  expect_true(any(grepl("p < .001", t14$Test)))
+
+  expect_warning(t15 <- egltable(c("weight", "WeightTertile"), g = "Time",
+                  data = tmp,
+                  idvar = "Chick", paired = TRUE,
+                  parametric = FALSE))
+
+  expect_is(t15, "data.table")
+  expect_true(any(grepl("Wilcoxon", t15$Test)))  
+  expect_true(any(grepl("McNemar", t15$Test)))
+  expect_true(any(grepl("p < .001", t15$Test)))
+
+  tmp$Chick[1] <- NA
+  expect_error(t16 <- egltable(c("weight", "WeightTertile"), g = "Time",
+                  data = tmp,
+                  idvar = "Chick", paired = TRUE))  
 })
 
 context("winsorizor")

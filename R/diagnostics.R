@@ -98,8 +98,8 @@ is.testDistribution <- function(x) {
 
 #' @param distr A character string indicating the distribution to be tested.
 #'   Currently one of: \dQuote{normal}, \dQuote{beta}, \dQuote{chisq} (chi-squared),
-#'   \dQuote{f}, \dQuote{gamma}, \dQuote{nbinom} (negative binomial),
-#'   \dQuote{poisson}, or \dQuote{mvnormal} for multivariate normal where Mahalanobis
+#'   \dQuote{f}, \dQuote{gamma}, \dQuote{geometric}, \dQuote{nbinom} (negative binomial),
+#'   \dQuote{poisson}, \dQuote{uniform}, or \dQuote{mvnormal} for multivariate normal where Mahalanobis
 #'   distances are calculated and compared against a Chi-squared distribution with
 #'   degrees of freedom equal to the number of variables.
 #' @param na.rm A logical value whether to omit missing values. Defaults to \code{TRUE}.
@@ -131,7 +131,7 @@ is.testDistribution <- function(x) {
 #'   name, log likelihood (useful for comparing the fit of different distributions
 #'   to the data), and a dataset with the sorted data and theoretical quantiles.
 #' @importFrom MASS fitdistr
-#' @importFrom stats dnorm qnorm dbeta qbeta dchisq qchisq
+#' @importFrom stats dnorm qnorm dbeta qbeta dchisq qchisq dunif qunif dgeom qgeom
 #' @importFrom stats df qf dgamma qgamma dnbinom qnbinom dpois qpois
 #' @importFrom stats logLik ppoints
 #' @importFrom stats mahalanobis qchisq ppoints
@@ -143,8 +143,6 @@ is.testDistribution <- function(x) {
 #' @export
 #' @rdname testDistribution
 #' @examples
-#'
-#' \dontrun{
 #'
 #' ## example data
 #' set.seed(1234)
@@ -167,6 +165,11 @@ is.testDistribution <- function(x) {
 #'   extremevalues = "empirical", ev.perc = .1)
 #' testDistribution(d$Ychisq, "chisq", starts = list(df = 8),
 #'   extremevalues = "theoretical", ev.perc = .1)
+#'
+#' \dontrun{
+#'
+#' testDistribution(d$Yf, "uniform")
+#' testDistribution(d$Ypois, "geometric")
 #'
 #' testDistribution(d$Yf, "f", starts = list(df1 = 5, df2 = 10))
 #' testDistribution(d$Ygamma, "gamma")
@@ -197,7 +200,7 @@ is.testDistribution <- function(x) {
 #' rm(d) ## cleanup
 #' }
 testDistribution.default <- function(x,
-  distr = c("normal", "beta", "chisq", "f", "gamma", "nbinom", "poisson", "mvnormal"),
+  distr = c("normal", "beta", "chisq", "f", "gamma", "geometric", "nbinom", "poisson", "uniform", "mvnormal"),
   na.rm = TRUE, starts,
   extremevalues = c("no", "theoretical", "empirical"),
   ev.perc = .005,
@@ -335,6 +338,11 @@ testDistribution.default <- function(x,
         q = qgamma,
         Name = "Gamma",
         fit = fitdistr(x, "gamma", lower = c(.001, .001))),
+      geometric = list(
+        d = dgeom,
+        q = qgeom,
+        Name = "Geometric",
+        fit = fitdistr(x, "geometric")),
       nbinom = list(
         d = dnbinom,
         q = qnbinom,
@@ -345,6 +353,19 @@ testDistribution.default <- function(x,
         q = qpois,
         Name = "Poisson",
         fit = fitdistr(x, "poisson")),
+      uniform = list(
+        d = dunif,
+        q = qunif,
+        Name = "Uniform",
+        fit = structure(list(
+          estimate = c(min = min(x), max = max(x)),
+          sd = c(min = NA_real_, max = NA_real_),
+          vcov = structure(c(NA_real_, NA_real_, NA_real_, NA_real_), .Dim = c(2L, 2L),
+                           .Dimnames = list(
+                             c("min", "max"), c("min", "max"))),
+          n = length(x),
+          loglik = NA_real_),
+          class = "fitdistr")),
       mvnormal = list(
         d = dchisq,
         q = qchisq,
@@ -421,6 +442,10 @@ testDistribution.default <- function(x,
 #' @param standardized A logical whether to use standardized residuals.
 #'   Defaults to \code{TRUE} generally where possible but may depend on
 #'   method.
+#' @param cut An integer, how many unique predicted values
+#'   there have to be at least for predicted values to be
+#'   treated continuously, otherwise they are treated as discrete values.
+#'   Defaults to 4.
 #' @param ... Additional arguments, not currently used.
 #' @return A logical (\code{is.residualDiagnostics}) or
 #'   a residualDiagnostics object (list) for
@@ -522,7 +547,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("originalindex"))
 #' }
 residualDiagnostics.lm <- function(object, ev.perc = .001,
                                    robust = FALSE, distr = "normal",
-                                   standardized = TRUE, ...) {
+                                   standardized = TRUE, cut = 4L, ...) {
   d.frame <- model.frame(object)
   naaction <- attr(d.frame, "na.action")
   if (isFALSE(is.null(naaction))) {
@@ -549,7 +574,8 @@ residualDiagnostics.lm <- function(object, ev.perc = .001,
 
   d.hat <- .quantilePercentiles(
     data = d.res,
-    LL = .1, UL = .9)
+    LL = .1, UL = .9,
+    cut = cut)
 
   d.dist <- testDistribution(
     x = d.res$Residuals,
@@ -592,51 +618,73 @@ residualDiagnostics.lm <- function(object, ev.perc = .001,
 #'   \code{.9} to give the 90th percentile.
 #' @param na.rm A logical whether to remove missing values.
 #'   Defaults to \code{TRUE}
+#' @param cut An integer, how many unique predicted values
+#'   there have to be at least for it to use quantile regression
+#'   or treat the predicted values as discrete.
+#'   Defaults to 4.
 #' @return A data.table with the scores and predicted LL and UL,
 #'   possibly missing if quantile regression models do not
 #'   converge.
 #' @importFrom quantreg qss rq rqss
 #' @importFrom data.table data.table :=
 #' @export
-.quantilePercentiles <- function(data, LL = .1, UL = .9, na.rm = TRUE) {
-  d.hat <- data.table(
-    Predicted = seq(
-      min(data$Predicted, na.rm = na.rm),
-      max(data$Predicted, na.rm = na.rm),
-      length.out = 1000))
+.quantilePercentiles <- function(data, LL = .1, UL = .9, na.rm = TRUE, cut = 4L) {
+  ## some predictions may be functionally identically but vary very slightly
+  ## identify range in predicted values and use this to adjust the rounding
+  ## to address slight discrepancies when identifying "unique" values
+  delta <- diff(range(data$Predicted, na.rm = na.rm))  
+  ## if there are <= cut unique non missing values, treat as discrete
+  pred <- round(data$Predicted, digits = ifelse(isTRUE(delta > 1), 8, 16))
+  uvals <- unique(na.omit(pred))
+  if (length(uvals) <= cut) {
+    data$Predicted <- round(data$Predicted, digits = ifelse(isTRUE(delta > 1), 8, 16))
+    d.hat <- data[, .(
+      LL = quantile(Residuals, probs = LL, na.rm = na.rm),
+      UL = quantile(Residuals, probs = UL, na.rm = na.rm),
+      cut = TRUE),
+      by = Predicted]
+  ## if more than cut unique non missing values, use quantile regression
+  } else {    
+    d.hat <- data.table(
+      Predicted = seq(
+        min(data$Predicted, na.rm = na.rm),
+        max(data$Predicted, na.rm = na.rm),
+        length.out = 1000))
 
-  tau.LL <- tryCatch(
-    rqss(Residuals ~ qss(Predicted, lambda = 1),
-         tau = LL, data = data),
-    error = function(e) TRUE)
-  if (!isTRUE(tau.LL)) {
-    tau.UL <- tryCatch(
+    tau.LL <- tryCatch(
       rqss(Residuals ~ qss(Predicted, lambda = 1),
-           tau = UL, data = data),
+           tau = LL, data = data),
       error = function(e) TRUE)
-  } else {
-    tau.UL <- TRUE
-  }
-  if (!isTRUE(tau.LL) && !isTRUE(tau.UL)) {
-    d.hat[, LL := predict(tau.LL, d.hat)]
-    d.hat[, UL := predict(tau.UL, d.hat)]
-  }
-  if (isTRUE(tau.LL) || isTRUE(tau.UL) ||
-      isTRUE(all.equal(d.hat$LL, d.hat$UL))) {
-    tau.2LL <- tryCatch(
-      rq(Residuals ~ Predicted, tau = LL, data = data),
-      error = function(e) TRUE)
-    if (!isTRUE(tau.2LL)) {
-      tau.2UL <- tryCatch(
-        rq(Residuals ~ Predicted, tau = UL, data = data),
+    if (!isTRUE(tau.LL)) {
+      tau.UL <- tryCatch(
+        rqss(Residuals ~ qss(Predicted, lambda = 1),
+             tau = UL, data = data),
         error = function(e) TRUE)
     } else {
-      tau.2UL <- TRUE
+      tau.UL <- TRUE
     }
-    if (!isTRUE(tau.2LL) && !isTRUE(tau.2UL)) {
-      d.hat[, LL := predict(tau.2LL, d.hat)]
-      d.hat[, UL := predict(tau.2UL, d.hat)]
+    if (!isTRUE(tau.LL) && !isTRUE(tau.UL)) {
+      d.hat[, LL := predict(tau.LL, d.hat)]
+      d.hat[, UL := predict(tau.UL, d.hat)]
     }
+    if (isTRUE(tau.LL) || isTRUE(tau.UL) ||
+          isTRUE(all.equal(d.hat$LL, d.hat$UL))) {
+      tau.2LL <- tryCatch(
+        rq(Residuals ~ Predicted, tau = LL, data = data),
+        error = function(e) TRUE)
+      if (!isTRUE(tau.2LL)) {
+        tau.2UL <- tryCatch(
+          rq(Residuals ~ Predicted, tau = UL, data = data),
+          error = function(e) TRUE)
+      } else {
+        tau.2UL <- TRUE
+      }
+      if (!isTRUE(tau.2LL) && !isTRUE(tau.2UL)) {
+        d.hat[, LL := predict(tau.2LL, d.hat)]
+        d.hat[, UL := predict(tau.2UL, d.hat)]
+      }
+    }
+    d.hat[, cut := FALSE]
   }
   if (isTRUE(all.equal(d.hat$LL, d.hat$UL))) {
     d.hat[, LL := NA_real_]
@@ -667,7 +715,7 @@ residualDiagnostics.lm <- function(object, ev.perc = .001,
 #' @param standardized A logical whether to use standardized residuals.
 #'   Defaults to \code{TRUE} generally where possible but may depend on
 #'   method.
-#' @param ... Additional arguments, not currently used.
+#' @param ... Additional arguments, passed to \code{residualDiagnostics}.
 #' @return A logical (\code{is.modelDiagnostics}) or
 #'   a modelDiagnostics object (list) for
 #'   \code{as.modelDiagnostics} and \code{modelDiagnostics}.
@@ -754,7 +802,8 @@ modelDiagnostics.lm <- function(object, ev.perc = .001,
                            ev.perc = ev.perc,
                            robust = robust,
                            distr = distr,
-                           standardized = standardized)
+                           standardized = standardized,
+                           ...)
 
   ## data for outliers
   d.extreme <- data.table(dv = NA_real_,

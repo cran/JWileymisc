@@ -35,8 +35,12 @@ plot.SEMSummary <- function(x, y, ...) {
 #' @param \dots Additional arguments passed on to the real workhorse, \code{corplot}.
 #' @method plot SEMSummary.list
 #' @seealso \code{\link{corplot}}, \code{\link{SEMSummary}}
-#' @importFrom cowplot plot_grid
+#' @importFrom ggpubr ggarrange
 #' @export
+#' @examples
+#'
+#' ## correlation matrix by am level
+#' plot(SEMSummary(~ . | am, data = mtcars))
 plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
 
   n <- names(x)
@@ -46,7 +50,9 @@ plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
   if (!missing(which)) {
     n <- n[which]
     if (length(n) == 1) {
-      p <- corplot(x = x[[n]]$sSigma, coverage = x[[n]]$coverage, pvalues = x[[n]]$pvalue, ...) + ggtitle(n)
+      p <- corplot(x = x[[n]]$sSigma, coverage = x[[n]]$coverage,
+                   pvalues = x[[n]]$pvalue, ...) +
+        ggtitle(n)
       print(p)
       return(invisible(p))
     }
@@ -58,14 +64,10 @@ plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
   })
   names(p) <- n
 
-
   if (plot) {
     if (length(p) > 1) {
-      glegend <- get_legend(p[[1]])
-      pnolegend <- lapply(p, function(x) x + theme(legend.position = "none"))
       nc <- ceiling(sqrt(length(p)))
-      widths <- c(rep(1, length(p)), .3)
-      print(do.call(plot_grid, c(pnolegend, list(glegend), list(ncol = nc, rel_widths = widths))))
+      print(do.call(ggarrange, c(p, list(ncol = nc, common.legend = TRUE))))
     } else {
       print(p[[1]])
     }
@@ -98,8 +100,9 @@ plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
 #'   \code{plot = "p"}.
 #' @param type A character string indicating what to show on top of the heatmap. Can be
 #'   \sQuote{coverage}, in which case bubble points show coverage;
-#'   \sQuote{p}, in which case p values are shown, or
-#'   \sQuote{cor}, in which case correlations are shown.
+#'   \sQuote{p}, in which case p values are shown;
+#'   \sQuote{cor}, in which case correlations are shown; or
+#'   \sQuote{both}, in which case both correlations and p-values are shown.
 #'   Only has an effect if a coverage (or pvalue) matrix is passed
 #'   also. Defaults to \code{cor}.
 #' @param digits The number of digits to round to when printing the
@@ -132,30 +135,37 @@ plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
 #' # randomly set 25% of the data to missing
 #' set.seed(10)
 #' dat[sample(length(dat), length(dat) * .25)] <- NA
+#' cor(dat, use = "pair")
+#' cor(dat, use = "complete")
 #'
 #' # create a summary of the data (including coverage matrix)
-#' sdat <- SEMSummary(~ ., data = dat)
+#' sdat <- SEMSummary(~ ., data = dat, use = "pair")
+#' str(sdat)
 #' # using the plot method for SEMSummary (which basically just calls corplot)
+#' ## getting correlations above diagonal and p values below diagonal#'
 #' plot(sdat)
 #'
-#' ## getting p values instaed of coverage
-#' # plot(sdat, type = "p")
+#' ## get correlations only
+#' plot(sdat, type = "cor")
 #'
-#' ## showing correlations instead of coverage
-#' # plot(sdat, type = "cor")
+#' ## showing coverage
+#' plot(sdat, type = "coverage")
 #'
 #' # use the control.grobs argument to adjust the coverage scaling
 #' # to go from 0 to 1 rather than the range of coverage
 #' corplot(x = sdat$sSigma, coverage = sdat$coverage,
+#'   type = "coverage",
 #'   control.grobs = list(area = quote(scale_size_area(limits = c(0, 1))))
 #' )
 #'
 #' # also works with plot() on a SEMSummary
-#' plot(x = sdat, control.grobs = list(area = quote(scale_size_area(limits = c(0, 1)))))
+#' plot(x = sdat, type = "coverage",
+#'   control.grobs = list(area = quote(scale_size_area(limits = c(0, 1))))
+#' )
 #'
 #' rm(dat, sdat)
 corplot <- function(x, coverage, pvalues,
-  type = c("cor", "p", "coverage"),
+  type = c("both", "cor", "p", "coverage"),
   digits = 2, order = c("cluster", "asis"), ..., control.grobs = list()) {
 
   ## copied and revised from reshape2 as otherwise creates clashes with depending on data.table package
@@ -201,13 +211,22 @@ corplot <- function(x, coverage, pvalues,
       n
     },
     asis = colnames(x)
-  )
+    )
+  x <- x[n, n]
+  if (!missing(coverage)) {
+    coverage <- coverage[n, n]
+  }
+  if (!missing(pvalues)) {
+    pvalues <- pvalues[n, n]
+  }
 
   mx <- reshape2.melt.matrix(x, value.name = "r")
   mx$Var1 <- factor(mx[, "Var1"], levels = n)
-  mx$Var2 <- factor(mx[, "Var2"], levels = n)
+  mx$Var2 <- factor(mx[, "Var2"], levels = rev(n))
   mx$correlation <- gsub(".+\\.", ".", format(round(mx[, "r"],
     digits = digits), digits = digits, nsmall = digits))
+  mx$correlation <- ifelse(mx$r < 0, paste0("-", mx$correlation), mx$correlation)
+  mx$correlation <- ifelse(mx$r > 0, paste0("+", mx$correlation), mx$correlation)
   ## deal with cases where correlations are 1
   mx$correlation[mx$r == 1] <- "1"
   ## set diagonals to blank
@@ -218,12 +237,19 @@ corplot <- function(x, coverage, pvalues,
 
   if (!missing(pvalues)) {
     mx$pvalues <- reshape2.melt.matrix(pvalues, value.name = "p")[, "p"]
-    ## mx$p <- gsub(".+\\.", ".", format.pval(round(mx[, "pvalues"],
-    ##   digits = digits), digits = digits, nsmall = digits))
-    mx$p <- gsub(".+\\.", ".", format.pval(mx[, "pvalues"],
-      digits = digits, nsmall = digits))
-
+    mx$p <- formatPval(mx[, "pvalues"], d = digits + 1L, sd = digits + 1L)
     mx$p[mx[, "Var1"] == mx[, "Var2"]] <- ""
+  }
+
+  if (identical(type, "both") & !missing(pvalues)) {
+    topx <- x
+    topx[] <- FALSE
+    topx[which(upper.tri(topx))] <- TRUE
+
+    mx$Top <- reshape2.melt.matrix(topx)$value
+
+    mx$both <- mx$correlation
+    mx$both[mx$Top == 1] <- mx$p[mx$Top == 1]
   }
 
   defaults <- list(
@@ -231,9 +257,11 @@ corplot <- function(x, coverage, pvalues,
     tiles = quote(geom_tile()),
     gradient = quote(scale_fill_gradientn(name = "Correlation",
       guide = guide_colorbar(),
-      colours = c("blue", "white", "red"), limits = c(-1, 1),
+      ## default colours from: https://colorbrewer2.org/#type=diverging&scheme=PuOr&n=3
+      colours = c("#998ec3", "#f7f7f7", "#f1a340"), limits = c(-1, 1),
       breaks = c(-.99, -.5, 0, .5, .99), labels = c("-1", "-.5", "0", "+.5", "+1"))),
     area = quote(scale_size_area()),
+    scale = quote(scale_x_discrete(position = "top") ),
     text = quote(geom_text(aes(label = correlation), size = 3, vjust = 0)),
     theme = quote(theme(axis.title = element_blank())))
 
@@ -244,12 +272,15 @@ corplot <- function(x, coverage, pvalues,
 
   if (identical(type, "coverage") & !missing(coverage)) {
     control.grobs$points = quote(geom_point(aes(size = coverage)))
-    p <- substitute(main + tiles + gradient + points + area + theme, control.grobs)
+    p <- substitute(main + tiles + gradient + points + area + scale + theme, control.grobs)
   } else if (identical(type, "p") & !missing(pvalues)) {
     control.grobs$text = quote(geom_text(aes(label = p), size = 3, vjust = 0))
-    p <- substitute(main + tiles + gradient + text + theme, control.grobs)
+    p <- substitute(main + tiles + gradient + text + scale + theme, control.grobs)
+  } else if (identical(type, "both") & !missing(pvalues)) {
+    control.grobs$text = quote(geom_text(aes(label = both), size = 3, vjust = 0))
+    p <- substitute(main + tiles + gradient + text + scale + theme, control.grobs)
   } else {
-    p <- substitute(main + tiles + gradient + text + theme, control.grobs)
+    p <- substitute(main + tiles + gradient + text + scale + theme, control.grobs)
   }
 
   eval(p)
@@ -271,10 +302,13 @@ corplot <- function(x, coverage, pvalues,
 #' @param size  A number indicating the size of points, passed to \code{\link{geom_point}}
 #' @importFrom ggplot2 ggplot aes_string geom_point scale_y_reverse dup_axis
 #' @importFrom ggplot2 theme element_line element_blank element_text coord_cartesian ggtitle
-#' @importFrom cowplot theme_cowplot plot_grid get_legend
+#' @importFrom ggpubr theme_pubr
 #' @export
 #' @examples
 #'
+#' library(JWileymisc)
+#' library(ggplot2)
+#' library(ggpubr)
 #' testdat <- data.table::data.table(
 #'   Var = 1:4,
 #'   Mean = c(1.5, 3, 2.2, 4.6),
@@ -329,7 +363,7 @@ gglikert <- function(x, y, leftLab, rightLab, colour, data, xlim, title,
       sec.axis = dup_axis(
         breaks = databreaks,
         labels = data[[rightLab]][index])) +
-    theme_cowplot() +
+    theme_pubr() +
     theme(
       panel.grid.major.y = element_line(size = 1),
       axis.line = element_blank(),
@@ -384,12 +418,16 @@ if(getRversion() >= "2.15.1") {
 #' @importFrom ggthemes geom_rangeframe theme_tufte
 #' @importFrom data.table melt as.data.table setnames
 #' @importFrom robustbase covMcd
+#' @importFrom ggpubr ggarrange
 #' @seealso \code{\link{testDistribution}}
 #' @method plot testDistribution
 #' @export
 #' @keywords hplot multivariate
 #' @examples
 #'
+#' ## evaluate mpg against a normal distribution
+#' plot(testDistribution(mtcars$mpg))
+#' 
 #' \dontrun{
 #'
 #' ## example data
@@ -445,7 +483,7 @@ if(getRversion() >= "2.15.1") {
 plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
                                   rugthreshold = 500, seed = 1234, factor = 1, ...) {
 
-  if (x$distr %in% c("poisson", "nbinom")) {
+  if (x$distr %in% c("poisson", "nbinom", "geometric")) {
     tmpd <- as.data.table(prop.table(table(x$Data$Y)))
     tmpd[, V1 := as.numeric(V1)]
     tmpd$Density <- do.call(x$Distribution$d,
@@ -544,9 +582,9 @@ plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
           legend.position = "none")
 
   if (plot) {
-    print(plot_grid(p.density, p.qqdeviates,
+    print(ggarrange(p.density, p.qqdeviates,
                     ncol = 1, align = "v",
-                    rel_heights = c(3, 1)))
+                    heights = c(3, 1)))
   }
 
   return(invisible(list(
@@ -672,16 +710,17 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("Predicted", "Residuals"
 #' @importFrom ggplot2 geom_point geom_bin2d scale_fill_gradient scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 element_text element_line
 #' @importFrom ggthemes geom_rangeframe theme_tufte
-#' @importFrom cowplot plot_grid
+#' @importFrom ggpubr ggarrange
 #' @keywords plot
 #' @method plot residualDiagnostics
 #' @export
 #' @examples
 #' testm <- stats::lm(mpg ~ hp * factor(cyl), data = mtcars)
+#' testm <- stats::lm(mpg ~ factor(cyl), data = mtcars)
 #'
 #' md <- residualDiagnostics(testm, ev.perc = .1)
 #'
-#' plot(md)
+#' plot(md, plot = FALSE)$ResFittedPlot
 #' plot(md, ncol = 2)
 #'
 #' ## clean up
@@ -700,9 +739,7 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
       geom_bin2d(aes(fill = ..count..), bins = 80) +
       scale_fill_gradient(low = "grey70", high = "black")
   }
-
   p.resfit <- p.resfit +
-    stat_smooth(method = "loess", se = FALSE, size = 1, colour = "blue") +
     geom_rangeframe() +
     scale_x_continuous(breaks = roundedfivenum(x$Residuals$Predicted)) +
     scale_y_continuous(breaks = roundedfivenum(x$Residuals$Residuals)) +
@@ -712,16 +749,33 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
       axis.text = element_text(colour = "black"),
       axis.ticks.x = element_line(colour = "white", size = 2)) +
     ggtitle(x$Outcome)
-
-  if (any(!is.na(x$Hat$LL) |
-          !is.na(x$Hat$UL))) {
+  
+  if ( isTRUE(x$Hat$cut[1]) ) {
     p.resfit <- p.resfit +
-      geom_line(mapping = aes(x = Predicted, y = LL),
-                data = x$Hat,
-                colour = "blue", size = 1, linetype = 2) +
-      geom_line(mapping = aes(x = Predicted, y = UL),
-                data = x$Hat,
-                colour = "blue", size = 1, linetype = 2)
+      geom_point(aes(x = Predicted, y = LL),
+                    data = x$Hat,
+                 colour = "blue", size = 4,
+                 shape = 23, fill = "blue") + 
+      geom_point(aes(x = Predicted, y = UL),
+                    data = x$Hat,
+                 colour = "blue", size = 4,
+                 shape = 23, fill = "blue")
+  } else {
+    p.resfit <- p.resfit +
+      stat_smooth(method = "loess",
+                  formula = y ~ x,
+                  se = FALSE, size = 1, colour = "blue")
+
+    if (any(!is.na(x$Hat$LL) |
+              !is.na(x$Hat$UL))) {
+      p.resfit <- p.resfit +
+        geom_line(mapping = aes(x = Predicted, y = LL),
+                  data = x$Hat,
+                  colour = "blue", size = 1, linetype = 2) +
+        geom_line(mapping = aes(x = Predicted, y = UL),
+                  data = x$Hat,
+                  colour = "blue", size = 1, linetype = 2)
+    }
   }
 
   ## distributions of residuals
@@ -729,11 +783,10 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
                    varlab = "Residuals",
                    plot = FALSE)
 
-  p.res <- plot_grid(
+  p.res <- ggarrange(
     p.tmpres$DensityPlot + ggtitle(x$Outcome),
     p.tmpres$QQDeviatesPlot, ncol = 1,
-    rel_heights = c(3, 1), align = "v")
-
+    heights = c(3, 1), align = "v")
 
   if (plot) {
     if (ask && dev.interactive()) {
@@ -741,7 +794,7 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
         on.exit(devAskNewPage(oask))
     }
     if (!missing(ncol)) {
-      print(plot_grid(
+      print(ggarrange(
         p.res,
         p.resfit,
         ncol = ncol))
@@ -774,7 +827,7 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
 #' @return a list including plots of the residuals,
 #'   residuals versus fitted values
 #' @importFrom grDevices dev.interactive devAskNewPage
-#' @importFrom cowplot plot_grid
+#' @importFrom ggpubr ggarrange
 #' @keywords plot
 #' @method plot modelDiagnostics.lm
 #' @export
@@ -796,7 +849,7 @@ plot.modelDiagnostics.lm <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
         on.exit(devAskNewPage(oask))
     }
     if (!missing(ncol)) {
-      print(plot_grid(
+      print(ggarrange(
         p$ResPlot,
         p$ResFittedPlot,
         ncol = ncol))

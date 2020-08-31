@@ -16,6 +16,11 @@
 #' meanCircular(c(6, 21), max = 24)
 #' meanCircular(c(6, 23), max = 24)
 #' meanCircular(c(.91, .96, .05, .16), max = 1)
+#' meanCircular(c(6, 7, 8, 9), max = 24)
+#' meanCircular(1:3, max = 24)
+#' meanCircular(21:23, max = 24)
+#' meanCircular(c(16, 17, 18, 19), max = 24)
+#' meanCircular(c(355, 5, 15), max = 360)
 #'
 meanCircular <- function(x, max, na.rm = TRUE) {
   if(!(is.integer(x) || is.numeric(x))) {
@@ -44,13 +49,19 @@ meanCircular <- function(x, max, na.rm = TRUE) {
   mc <- mean.default(cos(rad))
   ms <- mean.default(sin(rad))
 
-  if (ms > 0 && mc > 0) {
+  if (ms >= 0) {
     out <- atan2(ms, mc)
-  } else if (mc <= 0) {
-    out <- atan2(ms, mc) + pi
-  } else if (ms < 0 && mc > 0) {
+  } else if (ms < 0) {
     out <- atan2(ms, mc) + 2 * pi
   }
+
+  ## if (ms > 0 && mc > 0) {
+  ##   out <- atan2(ms, mc)
+  ## } else if (mc <= 0) {
+  ##   out <- atan2(ms, mc) + pi
+  ## } else if (ms < 0 && mc > 0) {
+  ##   out <- atan2(ms, mc) + 2 * pi
+  ## }
 
   ## radians to degrees and unscale to the inputs
   out <- out * (180 / pi) / scale
@@ -288,6 +299,17 @@ smd <- function(x, g, index = c("all", "1", "2")) {
 #'
 #' SEMSummary(~ ., data = Xmiss, use = "fiml")
 #'
+#'
+#' ## pairwise
+#' APAStyler(SEMSummary(~ ., data = Xmiss, use = "pair"),
+#'   type = "cor")
+#'
+#' ## same as cor()
+#' cor(Xmiss, use = "pairwise.complete.obs")
+#'
+#' ## complete cases only
+#' SEMSummary(~ ., data = Xmiss, use = "comp")
+#'
 #' ## clean up
 #' rm(Xmiss)
 SEMSummary <- function(formula, data,
@@ -297,6 +319,8 @@ SEMSummary <- function(formula, data,
   if (!is.data.frame(data)) {
     data <- as.data.frame(data)
   }
+
+  use <- match.arg(use)
 
   tmp <- unlist(strsplit(paste(deparse(formula), collapse = ""), "\\|"))
   formula <- as.formula(tmp[1], env = env)
@@ -343,7 +367,7 @@ SEMSummary <- function(formula, data,
 #'     used to calculate degrees of freedom.}
 #' @seealso \code{\link{SEMSummary}}
 #' @keywords multivariate
-#' @importFrom stats cov cov2cor pt
+#' @importFrom stats cov cov2cor pt cor
 SEMSummary.fit <- function(formula, data,
   use = c("fiml", "pairwise.complete.obs", "complete.obs")) {
 
@@ -377,7 +401,12 @@ SEMSummary.fit <- function(formula, data,
   mu <- res$mu
   Sigma <- res$sigma
   stdev <- sqrt(diag(Sigma))
-  sSigma <- cov2cor(Sigma)
+
+  if (identical(use, "pairwise.complete.obs")) {
+    sSigma <- cor(X, use = "pairwise.complete.obs")
+  } else {
+    sSigma <- cov2cor(Sigma)
+  }
 
   n <- nrow(X)
   L <- is.na(X)
