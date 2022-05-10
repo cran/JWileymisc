@@ -1,3 +1,23 @@
+# JWileymisc 1.3.0
+
+## New Features
+* `diffCircular()` calculates the circular difference 
+	between two vectors.
+* `saveRDSfst()` saves RDS files using `fst` for multithreaded compression.
+* `readRDSfst()` reads RDS files using `fst` for multithreaded decompression.
+
+## Bug Fixes
+* `egltable()` now correctly handles categorical variables by 
+   a grouping variable, when the categorical variable is not 
+   a factor class. Fixes a bug that could occur with 
+   cells with zero frequencies when the variables were not 
+   factors.
+* `winsorizor()` would not properly check if a vector of percentiles 
+   was passed. This is fixed and a new test added to prevent regression.
+   
+## Changes
+* Now using testthat 3e and preferably for light/dark package website.
+
 # JWileymisc 1.2.0
 
 ## Bug Fixes

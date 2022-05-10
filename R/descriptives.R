@@ -66,12 +66,49 @@ meanCircular <- function(x, max, na.rm = TRUE) {
   ## radians to degrees and unscale to the inputs
   out <- out * (180 / pi) / scale
   if (out == max) {
-    0
-  } else {
-    out
+    out <- 0
   }
-
+  return(out)
 }
+
+#' Calculate the Circular Difference
+#'
+#' @param x Numeric or integer values
+#' @param y Numeric or integer values
+#' @param max the theoretical maximum (e.g., if degrees, 360; if hours, 24; etc.).
+#' @return A value with the circular difference. This will always be positive if defined.
+#' @export
+#' @examples
+#' diffCircular(330, 30, max = 360)
+#' diffCircular(22, 1, max = 24)
+#' diffCircular(c(22, 23, 21, 22), c(1, 1, 23, 14), max = 24)
+diffCircular <- function(x, y, max) {
+    if (!(is.integer(x) || is.numeric(x))) {
+        stop(sprintf("x must be class integer or numeric but was %s", 
+            paste(class(x), collapse = "; ")))
+    }
+    if (!(is.integer(y) || is.numeric(y))) {
+        stop(sprintf("y must be class integer or numeric but was %s", 
+            paste(class(y), collapse = "; ")))
+    }
+
+    stopifnot(identical(length(x), length(y)))
+    
+    if (any(x < 0 | y < 0, na.rm = TRUE)) {
+      stop("For cicular means, cannot have negative numbers")
+    }
+    if (any(x > max | y > max, na.rm = TRUE)) {
+      stop("For cicular means, cannot have values above the theoretical maximum")
+    }
+
+    scale <- 360/max
+    torad <- scale * (pi / 180)
+    toorig <- (180 / pi) / scale
+    radx <- x * torad
+    rady <- y * torad
+    acos(cos(radx - rady)) * toorig 
+}
+
 
 #' Estimate the first and second moments
 #'
@@ -478,7 +515,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("dv1", "dv2"))
 #'   Test but generalizing to large dimension of tables.
 #' @param sims Integer for the number of simulations to be used to estimate
 #'   p-values for the chi-square tests for categorical variables when
-#'   there are multiple groups.
+#'   there are multiple groups. Defaults to one million (\code{1e6L}).
 #' @return A data frame of the table.
 #' @keywords utils
 #' @export
@@ -531,7 +568,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("dv1", "dv2"))
 #'
 #' rm(tmp)
 egltable <- function(vars, g, data, idvar, strict=TRUE, parametric = TRUE,
-                     paired = FALSE, simChisq = FALSE, sims = 1e6) {
+                     paired = FALSE, simChisq = FALSE, sims = 1e6L) {
   if (!missing(data)) {
     if (is.data.table(data)) {
       dat <- data[, vars, with=FALSE]
@@ -592,6 +629,13 @@ egltable <- function(vars, g, data, idvar, strict=TRUE, parametric = TRUE,
     multi <- FALSE
   }
 
+  if (isTRUE(length(catvars.index)>0)) {
+    for (n in vnames[catvars.index]) {
+      if (isFALSE(is.factor(dat[[n]]))) {
+        dat[[n]] <- factor(dat[[n]])
+      }
+    }
+  }
 
   tmpout <- lapply(levels(g), function(gd) {
     d <- dat[which(g == gd)]
@@ -623,7 +667,7 @@ egltable <- function(vars, g, data, idvar, strict=TRUE, parametric = TRUE,
 
     if (isTRUE(length(catvars.index)>0)) {
       tmpcat <- lapply(vnames[catvars.index], function(n) {
-         x <- table(d[[n]])
+        x <- table(d[[n]])
         data.table(
           Variable = c(n, paste0("  ", names(x))),
           Res = c("", sprintf("%d (%2.1f)", x, prop.table(x) * 100)))
@@ -807,6 +851,7 @@ egltable <- function(vars, g, data, idvar, strict=TRUE, parametric = TRUE,
 #'   at the lower and upper ends.
 #' @importFrom stats quantile
 #' @importFrom data.table data.table := copy is.data.table
+#' @importFrom extraoperators %age% %ale%
 #' @export
 #' @examples
 #' dev.new(width = 10, height = 5)
@@ -829,14 +874,17 @@ egltable <- function(vars, g, data, idvar, strict=TRUE, parametric = TRUE,
 #' rm(dat) # clean up
 winsorizor <- function(d, percentile, values, na.rm = TRUE) {
     if (!missing(percentile)) {
-      stopifnot(percentile >= 0 && percentile <= 1)
+      stopifnot(percentile %age% 0 && percentile %ale% 1)
     } else if (missing(percentile)) {
       percentile <- NA_real_
     }
 
   if (!is.vector(d) && !is.matrix(d) && !is.data.frame(d) && !is.data.table(d)) {
     if (is.atomic(d) && is.null(dim(d))) {
-      warning("atomic type with no dimensions, coercing to a numeric vector. To remove this warning, try wrapping the data in as.numeric() or otherwise coercing to a vector prior to passing to winsorizor().")
+      warning(paste0(
+        "Atomic type with no dimensions, coercing to a numeric vector.\n",
+        "To remove this warning, try wrapping the data in as.numeric() or\n",
+        "otherwise coercing to a vector prior to passing to winsorizor()."))
       d <- as.numeric(d)
     }
   }
@@ -872,18 +920,18 @@ winsorizor <- function(d, percentile, values, na.rm = TRUE) {
         if (is.data.table(d)) {
           d <- copy(d)
           if (missing(values)) {
-            for (i in 1:ncol(d)) {
+            for (i in seq_len(ncol(d))) {
               v <- names(d)[i]
               d[, (v) := f(get(v), percentile = percentile[i], na.rm = na.rm)]
             }
           } else {
-            for (i in 1:ncol(d)) {
+            for (i in seq_len(ncol(d))) {
               v <- names(d)[i]
               d[, (v) := f(get(v), percentile = percentile[i], values = values[i, ], na.rm = na.rm)]
             }
           }
 
-          all.attr <- do.call(rbind, lapply(1:ncol(d), function(i) attr(d[[i]], "winsorizedValues")))
+          all.attr <- do.call(rbind, lapply(seq_len(ncol(d)), function(i) attr(d[[i]], "winsorizedValues")))
           all.attr$variable <- colnames(d)
           rownames(all.attr) <- NULL
 
@@ -894,11 +942,11 @@ winsorizor <- function(d, percentile, values, na.rm = TRUE) {
         } else {
 
           if (missing(values)) {
-            tmp <- lapply(1:ncol(d), function(i) {
+            tmp <- lapply(seq_len(ncol(d)), function(i) {
               f(d[, i], percentile = percentile[i], na.rm = na.rm)
             })
           } else {
-            tmp <- lapply(1:ncol(d), function(i) {
+            tmp <- lapply(seq_len(ncol(d)), function(i) {
               f(d[, i], percentile = percentile[i], values = values[i, ], na.rm = na.rm)
             })
           }

@@ -2,14 +2,11 @@ JWileymisc
 ==========
 
 <!-- badges: start -->
-[![Build
-Status](https://travis-ci.com/JWiley/JWileymisc.svg?branch=master)](https://travis-ci.com/JWiley/JWileymisc)
-[![Codecov test coverage](https://codecov.io/gh/JWiley/JWileymisc/branch/master/graph/badge.svg)](https://codecov.io/gh/JWiley/JWileymisc?branch=master)
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/JWileymisc)](https://cran.r-project.org/package=JWileymisc)
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-
+[![CRAN_status](https://www.r-pkg.org/badges/version/JWileymisc)](https://cran.r-project.org/package=JWileymisc)
+[![R-CMD-check](https://github.com/JWiley/JWileymisc/workflows/R-CMD-check/badge.svg)](https://github.com/JWiley/JWileymisc/actions)
+[![codecov](https://codecov.io/gh/JWiley/JWileymisc/branch/main/graph/badge.svg?token=eW8frgT2Q1)](https://app.codecov.io/gh/JWiley/JWileymisc)
+[![lifecycle](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- badges: end -->
-
 
 An `R` package with general utility and convenience functions.
 Some of these are general functions that help using and
@@ -25,18 +22,17 @@ Installation
 
 To get the latest development version, use:
 
-``` r
+```r
 
 #install.packages("devtools")
-library(devtools)
 
-install_github("JWiley/JWileymisc")
+devtools::install_github("JWiley/JWileymisc")
 
 ```
 
-To get the version on cran:
+To get the version on CRAN:
 
-``` r
+```r
 
 install.packages("JWileymisc")
 
