@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -66,7 +66,7 @@ plot(testN)
 plot(testG)
 
 
-## ---- fig.height = 10---------------------------------------------------------
+## ----fig.height = 10----------------------------------------------------------
 
 m <- lm(mpg ~ hp * factor(cyl), data = mtcars)
 
@@ -83,7 +83,7 @@ md$extremeValues
 mtcars[md$extremeValues$Index, 1:4]
 
 
-## ---- results = "hide"--------------------------------------------------------
+## ----results = "hide"---------------------------------------------------------
 
 ## exclude extreme values
 m2 <- lm(mpg ~ hp * factor(cyl), data = mtcars[-md$extremeValues$Index, ])
@@ -96,7 +96,7 @@ round(data.frame(
   PercentChange = coef(m2) / coef(m) * 100 - 100), 2)
 
 
-## ---- echo = FALSE, results = "asis"------------------------------------------
+## ----echo = FALSE, results = "asis"-------------------------------------------
 if (requireNamespace("pander", quietly = TRUE)) {
 pander::pandoc.table(round(data.frame(
   M1 = coef(m),
@@ -107,7 +107,7 @@ pander::pandoc.table(round(data.frame(
   ""
 }
 
-## ---- fig.height = 10---------------------------------------------------------
+## ----fig.height = 10----------------------------------------------------------
 
 ## diagnostics after removing outliers from first model
 md2 <- modelDiagnostics(m2, ev.perc = .05)
