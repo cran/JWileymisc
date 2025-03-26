@@ -26,8 +26,18 @@ test_that("internal function, .quantilePercentiles works", {
 
   x <- JWileymisc:::.quantilePercentiles(
     data.frame(
-      Predicted = 1:10,
+      Predicted = 1:5,
       Residuals = 1))
+
+  expect_s3_class(x, "data.table")
+  expect_equal(nrow(x), 5L)
+  expect_false(anyNA(x))
+
+  expect_message(
+    x <- JWileymisc:::.quantilePercentiles(
+    data.frame(
+      Predicted = 1:10,
+      Residuals = 1)))
 
   expect_s3_class(x, "data.table")
   expect_equal(nrow(x), 1000)

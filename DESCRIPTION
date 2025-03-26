@@ -1,6 +1,6 @@
 Package: JWileymisc
 Title: Miscellaneous Utilities and Functions
-Version: 1.4.1
+Version: 1.4.2
 Authors@R: 
     person(given = "Joshua F.",
            family = "Wiley",
@@ -16,22 +16,22 @@ Description: Miscellaneous tools and functions,
     distributions, and generic functions for residual and
     model diagnostics. 
 License: GPL (>= 3)
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1.0)
 Imports: stats, utils, MASS, multcompView, emmeans, data.table (>=
-        1.14.8), graphics, ggthemes, ggplot2 (>= 3.4.3), ggpubr, mgcv,
-        mice, methods, psych, grid, rms, robustbase, quantreg, lavaan
-        (>= 0.6-16), VGAM (>= 1.1-9), lme4, extraoperators (>= 0.1.1),
+        1.14.8), graphics, grid, ggplot2 (>= 3.4.3), scales, ggpubr,
+        mgcv, mice, methods, psych, robustbase, gamlss, lavaan (>=
+        0.6-16), VGAM (>= 1.1-9), lme4, extraoperators (>= 0.1.1),
         digest, fst, rlang
-Suggests: scales, foreach, testthat (>= 3.1.10), covr, withr, knitr,
-        rmarkdown, pander, GPArotation
+Suggests: foreach, testthat (>= 3.1.10), covr, withr, knitr, rmarkdown,
+        pander, GPArotation, rms
 Encoding: UTF-8
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2023-10-05 01:04:58 UTC; jwile
+Packaged: 2025-03-26 02:34:11 UTC; jwile
 Author: Joshua F. Wiley [aut, cre] (<https://orcid.org/0000-0002-0271-6702>)
 Maintainer: Joshua F. Wiley <jwiley.psych@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-10-05 04:50:02 UTC
+Date/Publication: 2025-03-26 05:50:02 UTC

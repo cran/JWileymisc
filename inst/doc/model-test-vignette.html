@@ -12,7 +12,7 @@
 
 <meta name="author" content="Joshua F. Wiley" />
 
-<meta name="date" content="2023-10-05" />
+<meta name="date" content="2025-03-26" />
 
 <title>Model Performance and Tests</title>
 
@@ -50,8 +50,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -340,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Model Performance and Tests</h1>
 <h4 class="author">Joshua F. Wiley</h4>
-<h4 class="date">2023-10-05</h4>
+<h4 class="date">2025-03-26</h4>
 
 
 
@@ -378,13 +379,15 @@ variance accounted for)</li>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>mp <span class="ot">&lt;-</span> <span class="fu">modelPerformance</span>(m)</span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">print</span>(mp)</span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; $Performance</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;    Model N_Obs      AIC      BIC        LL LLDF    Sigma        R2       F2</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; 1:    lm    32 169.8964 177.2251 -79.94822    5 3.146243 0.7538578 3.062692</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;        AdjR2        F FNumDF FDenDF           P</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; 1: 0.7274854 28.58513      3     28 1.13969e-08</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelPerformance.lm&quot; &quot;modelPerformance&quot;</span></span></code></pre></div>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;     Model N_Obs      AIC      BIC        LL  LLDF    Sigma        R2       F2</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;    &lt;num&gt;    &lt;num&gt;     &lt;num&gt; &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; 1:     lm    32 169.8964 177.2251 -79.94822     5 3.146243 0.7538578 3.062692</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;        AdjR2        F FNumDF FDenDF           P</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;        &lt;num&gt;    &lt;num&gt;  &lt;num&gt;  &lt;num&gt;       &lt;num&gt;</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; 1: 0.7274854 28.58513      3     28 1.13969e-08</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelPerformance.lm&quot; &quot;modelPerformance&quot;</span></span></code></pre></div>
 <p>If only certain metrics are desired, these can be found by extracting
 the “Performance” list element and then the correct column from the data
 table.</p>
@@ -403,74 +406,81 @@ family.</p>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">print</span>(mt)</span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; $FixedEffects</span></span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;           Term         Est           LL           UL         Pval</span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 1: (Intercept) 28.65011816  25.39768395 31.902552374 5.921199e-17</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 2:          hp -0.02403883  -0.05560048  0.007522814 1.299540e-01</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 3:        cyl6 -5.96765508  -9.32556307 -2.609747083 1.092089e-03</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 4:        cyl8 -8.52085075 -13.28559928 -3.756102224 1.028617e-03</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; $RandomEffects</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; [1] NA</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; $EffectSizes</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;    Term N_Obs         AIC        BIC       LL LLDF       Sigma         R2</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 1:   hp     0  -0.6675031  0.7982328 1.333752    1 -0.07685536 0.02139775</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; 2:  cyl     0 -11.3421811 -8.4107093 7.671091    2 -0.71671885 0.15142046</span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;            F2     AdjR2        F FNumDF FDenDF           P  Type</span></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; 1: 0.08693246 0.0134764 2.434109      1     28 0.129954045 Fixed</span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; 2: 0.61517476 0.1383002 8.612447      2     28 0.001215981 Fixed</span></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; $OverallModel</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; $Performance</span></span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt;    Model N_Obs      AIC      BIC        LL LLDF    Sigma        R2       F2</span></span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; 1:    lm    32 169.8964 177.2251 -79.94822    5 3.146243 0.7538578 3.062692</span></span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt;        AdjR2        F FNumDF FDenDF           P</span></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt; 1: 0.7274854 28.58513      3     28 1.13969e-08</span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelPerformance.lm&quot; &quot;modelPerformance&quot;   </span></span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelTest.lm&quot; &quot;modelTest&quot;</span></span></code></pre></div>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;         &lt;char&gt;       &lt;num&gt;        &lt;num&gt;        &lt;num&gt;        &lt;num&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 1: (Intercept) 28.65011816  25.39768395 31.902552374 5.921199e-17</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 2:          hp -0.02403883  -0.05560048  0.007522814 1.299540e-01</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 3:        cyl6 -5.96765508  -9.32556307 -2.609747083 1.092089e-03</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 4:        cyl8 -8.52085075 -13.28559928 -3.756102224 1.028617e-03</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; $RandomEffects</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; [1] NA</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; $EffectSizes</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;      Term N_Obs         AIC        BIC       LL  LLDF       Sigma         R2</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;       &lt;num&gt;      &lt;num&gt;    &lt;num&gt; &lt;num&gt;       &lt;num&gt;      &lt;num&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; 1:     hp     0  -0.6675031  0.7982328 1.333752     1 -0.07685536 0.02139775</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; 2:    cyl     0 -11.3421811 -8.4107093 7.671091     2 -0.71671885 0.15142046</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;            F2     AdjR2        F FNumDF FDenDF           P   Type</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt;         &lt;num&gt;     &lt;num&gt;    &lt;num&gt;  &lt;num&gt;  &lt;num&gt;       &lt;num&gt; &lt;char&gt;</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; 1: 0.08693246 0.0134764 2.434109      1     28 0.129954045  Fixed</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; 2: 0.61517476 0.1383002 8.612447      2     28 0.001215981  Fixed</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; $OverallModel</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; $Performance</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt;     Model N_Obs      AIC      BIC        LL  LLDF    Sigma        R2       F2</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt;    &lt;char&gt; &lt;num&gt;    &lt;num&gt;    &lt;num&gt;     &lt;num&gt; &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt;</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; 1:     lm    32 169.8964 177.2251 -79.94822     5 3.146243 0.7538578 3.062692</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt;        AdjR2        F FNumDF FDenDF           P</span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt;        &lt;num&gt;    &lt;num&gt;  &lt;num&gt;  &lt;num&gt;       &lt;num&gt;</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt; 1: 0.7274854 28.58513      3     28 1.13969e-08</span></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelPerformance.lm&quot; &quot;modelPerformance&quot;   </span></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;class&quot;)</span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co">#&gt; [1] &quot;modelTest.lm&quot; &quot;modelTest&quot;</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">APAStyler</span>(mt)</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;                 Term                      Est          Type</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;  1:      (Intercept) 28.65*** [ 25.40, 31.90] Fixed Effects</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  2:               hp    -0.02 [ -0.06,  0.01] Fixed Effects</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  3:             cyl6  -5.97** [ -9.33, -2.61] Fixed Effects</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  4:             cyl8  -8.52** [-13.29, -3.76] Fixed Effects</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  5: N (Observations)                       32 Overall Model</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  6:        logLik DF                        5 Overall Model</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  7:           logLik                   -79.95 Overall Model</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  8:              AIC                   169.90 Overall Model</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  9:              BIC                   177.23 Overall Model</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; 10:               F2                     3.06 Overall Model</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 11:               R2                     0.75 Overall Model</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 12:           Adj R2                     0.73 Overall Model</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 13:               hp      f2 = 0.09, p = .130  Effect Sizes</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; 14:              cyl      f2 = 0.62, p = .001  Effect Sizes</span></span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;               &lt;char&gt;                   &lt;char&gt;        &lt;char&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  1:      (Intercept) 28.65*** [ 25.40, 31.90] Fixed Effects</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  2:               hp    -0.02 [ -0.06,  0.01] Fixed Effects</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  3:             cyl6  -5.97** [ -9.33, -2.61] Fixed Effects</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  4:             cyl8  -8.52** [-13.29, -3.76] Fixed Effects</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  5: N (Observations)                       32 Overall Model</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  6:        logLik DF                        5 Overall Model</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  7:           logLik                   -79.95 Overall Model</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  8:              AIC                   169.90 Overall Model</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  9:              BIC                   177.23 Overall Model</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 10:               F2                     3.06 Overall Model</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 11:               R2                     0.75 Overall Model</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 12:           Adj R2                     0.73 Overall Model</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; 13:               hp      f2 = 0.09, p = .130  Effect Sizes</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; 14:              cyl      f2 = 0.62, p = .001  Effect Sizes</span></span></code></pre></div>
 <p>The model tests can also be used with interactions.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a></span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">lm</span>(mpg <span class="sc">~</span> hp <span class="sc">*</span> cyl, <span class="at">data =</span> mtcars)</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="fu">APAStyler</span>(<span class="fu">modelTest</span>(m2))</span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;                 Term                       Est          Type</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  1:      (Intercept)  35.98*** [ 27.99, 43.98] Fixed Effects</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  2:               hp    -0.11* [ -0.21, -0.02] Fixed Effects</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  3:             cyl6   -15.31* [-30.59, -0.03] Fixed Effects</span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  4:             cyl8  -17.90** [-28.71, -7.09] Fixed Effects</span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  5:          hp:cyl6      0.11 [ -0.04,  0.25] Fixed Effects</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  6:          hp:cyl8      0.10 [  0.00,  0.20] Fixed Effects</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;  7: N (Observations)                        32 Overall Model</span></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;  8:        logLik DF                         7 Overall Model</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;  9:           logLik                    -77.54 Overall Model</span></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; 10:              AIC                    169.08 Overall Model</span></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; 11:              BIC                    179.34 Overall Model</span></span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 12:               F2                      3.72 Overall Model</span></span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; 13:               R2                      0.79 Overall Model</span></span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; 14:           Adj R2                      0.75 Overall Model</span></span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; 15:               hp       f2 = 0.23, p = .021  Effect Sizes</span></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; 16:              cyl       f2 = 0.47, p = .007  Effect Sizes</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; 17:           hp:cyl       f2 = 0.16, p = .142  Effect Sizes</span></span></code></pre></div>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;               &lt;char&gt;                    &lt;char&gt;        &lt;char&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  1:      (Intercept)  35.98*** [ 27.99, 43.98] Fixed Effects</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  2:               hp    -0.11* [ -0.21, -0.02] Fixed Effects</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  3:             cyl6   -15.31* [-30.59, -0.03] Fixed Effects</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  4:             cyl8  -17.90** [-28.71, -7.09] Fixed Effects</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  5:          hp:cyl6      0.11 [ -0.04,  0.25] Fixed Effects</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;  6:          hp:cyl8      0.10 [  0.00,  0.20] Fixed Effects</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;  7: N (Observations)                        32 Overall Model</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;  8:        logLik DF                         7 Overall Model</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt;  9:           logLik                    -77.54 Overall Model</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; 10:              AIC                    169.08 Overall Model</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 11:              BIC                    179.34 Overall Model</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; 12:               F2                      3.72 Overall Model</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; 13:               R2                      0.79 Overall Model</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; 14:           Adj R2                      0.75 Overall Model</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; 15:               hp       f2 = 0.23, p = .021  Effect Sizes</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; 16:              cyl       f2 = 0.47, p = .007  Effect Sizes</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; 17:           hp:cyl       f2 = 0.16, p = .142  Effect Sizes</span></span></code></pre></div>
 </div>
 
 

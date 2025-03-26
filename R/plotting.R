@@ -124,6 +124,7 @@ plot.SEMSummary.list <- function(x, y, which, plot = TRUE, ...) {
 #' @importFrom ggplot2 ggtitle
 #' @importFrom stats setNames as.dist hclust
 #' @importFrom utils type.convert
+#' @importFrom ggplot2 element_text
 #' @export
 #' @examples
 #' # example plotting the correlation matrix from the
@@ -263,7 +264,7 @@ corplot <- function(x, coverage, pvalues,
     area = quote(scale_size_area()),
     scale = quote(scale_x_discrete(position = "top") ),
     text = quote(geom_text(aes(label = correlation), size = 3, vjust = 0)),
-    theme = quote(theme(axis.title = element_blank())))
+    theme = quote(theme(axis.title = element_blank(), axis.text.x = element_text(angle = 45, hjust = 0))))
 
   i <- names(defaults)[!names(defaults) %in% names(control.grobs)]
   control.grobs[i] <- defaults[i]
@@ -293,15 +294,16 @@ corplot <- function(x, coverage, pvalues,
 #' @param y The variable containing an index of the different items, should be integers
 #' @param leftLab The variable with anchors for the low end of the Likert scale
 #' @param rightLab The variable with anchors for the high end of the Likert scale
-#' @param colour  A character string giving the name of a variable for colouring the data, like a grouping variable. Alternately the colour of points passed to \code{\link{geom_point}}
+#' @param colour  A character string giving the name of a variable for colouring the data, like a grouping variable. Alternately the colour of points passed to \code{\link[ggplot2]{geom_point}}
 #' @param data The data to use for plotting
 #' @param xlim A vector giving the lower an upper limit for the x axis.  This should be the
 #'   possible range of the Likert scale, not the actual range.
 #' @param title A character vector giving the title for the plot
-#' @param shape A number indicating the point shape, passed to \code{\link{geom_point}}
-#' @param size  A number indicating the size of points, passed to \code{\link{geom_point}}
-#' @importFrom ggplot2 ggplot geom_point scale_y_reverse dup_axis
-#' @importFrom ggplot2 theme element_line element_blank element_text coord_cartesian ggtitle
+#' @param shape A number indicating the point shape, passed to \code{\link[ggplot2]{geom_point}}
+#' @param size  A number indicating the size of points, passed to \code{\link[ggplot2]{geom_point}}
+#' @importFrom ggplot2 ggplot geom_point scale_y_reverse dup_axis ggtitle
+#' @importFrom ggplot2 theme element_line element_blank element_text
+#' @importFrom ggplot2 coord_cartesian
 #' @importFrom ggpubr theme_pubr
 #' @importFrom rlang .data
 #' @export
@@ -380,7 +382,7 @@ gglikert <- function(x, y, leftLab, rightLab, colour, data, xlim, title,
 }
 
 # clear R CMD CHECK notes
-if(getRversion() >= "2.15.1") {
+if (getRversion() >= "2.15.1") {
   utils::globalVariables(
            c("X", "Y", "isEV", "YDeviates", "count", "variable",
              "V1", "value"))
@@ -416,7 +418,6 @@ if(getRversion() >= "2.15.1") {
 #' @importFrom ggplot2 geom_abline ggtitle xlab ylab
 #' @importFrom ggplot2 scale_x_continuous scale_y_continuous theme ggtitle
 #' @importFrom ggplot2 element_text element_line
-#' @importFrom ggthemes geom_rangeframe theme_tufte
 #' @importFrom data.table melt as.data.table setnames
 #' @importFrom robustbase covMcd
 #' @importFrom ggpubr ggarrange
@@ -514,12 +515,10 @@ plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
     scale_colour_manual(values = c("No" = "grey70", "Yes" = "black")) +
     ylab("Density") +
     scale_x_continuous(breaks = roundedfivenum(x$Data$Y)) +
-    geom_rangeframe() +
-    theme_tufte(base_family = "sans") +
+    geom_tufterange() + theme_tufte() +
     theme(
       legend.position = "none",
-      axis.text = element_text(colour = "black"),
-      axis.ticks = element_line(colour = "white", linewidth = 2))
+      axis.text = element_text(colour = "black"))
 
   if (identical(x$distr, "mvnormal")) {
     p.density <- p.density +
@@ -551,8 +550,7 @@ plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
     xlab(label = "Theoretical Quantiles") +
     scale_x_continuous(breaks = roundedfivenum(x$Data$X)) +
     scale_y_continuous(breaks = roundedfivenum(x$Data$Y)) +
-    geom_rangeframe() +
-    theme_tufte(base_family = "sans") +
+    geom_tufterange() + theme_tufte() +
     theme(
       legend.position = "none",
       axis.text = element_text(colour = "black"))
@@ -575,7 +573,7 @@ plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
     scale_colour_manual(values = c("No" = "grey70", "Yes" = "black")) +
     geom_hline(yintercept = 0) +
     ylab("Deviates") +
-    theme_tufte(base_family = "sans") +
+    theme_tufte() +
     theme(axis.line.x = element_blank(),
           axis.title.x = element_blank(),
           axis.text.x = element_blank(),
@@ -596,7 +594,7 @@ plot.testDistribution <- function(x, y, xlim = NULL, varlab = "X", plot = TRUE,
 }
 
 # clear R CMD CHECK notes
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("ymax", ".", "upper.CL", "Letters", "lower.CL", "emmean"))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("ymax", ".", "upper.CL", "Letters", "lower.CL", "emmean"))
 
 #' Tukey HSD Plot
 #'
@@ -683,11 +681,11 @@ TukeyHSDgg <- function(x, y, d, ci = .95, idvar, ...) {
 }
 
 # clear R CMD CHECK notes
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("EffectType", "OriginalOrder"))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("EffectType", "OriginalOrder"))
 
 ## clear R CMD CHECK notes
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("Predicted", "Residuals",
-                                                        "LL", "UL"))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("Predicted", "Residuals",
+                                                        "Mid", "LL", "UL"))
 
 
 #' Plot Residual Diagnostics Default Method
@@ -711,7 +709,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("Predicted", "Residuals"
 #' @importFrom ggplot2 ggtitle theme geom_quantile stat_smooth
 #' @importFrom ggplot2 geom_point geom_bin2d scale_fill_gradient scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 element_text element_line
-#' @importFrom ggthemes geom_rangeframe theme_tufte
 #' @importFrom ggpubr ggarrange
 #' @keywords plot
 #' @method plot residualDiagnostics
@@ -728,78 +725,147 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("Predicted", "Residuals"
 #' ## clean up
 #' rm(testm, md)
 plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
-  ## residuals versus fitted
-  p.resfit <- ggplot(x$Residuals, aes(Predicted, Residuals))
-  if (x$N < 500) {
-    p.resfit <- p.resfit +
-      geom_point(aes(colour = isEV),
-        alpha = pmin(1 / sqrt(log10(x$N)), 1)) +
-      scale_colour_manual(values = c("No" = "grey50", "Yes" = "black")) +
-      guides(colour = "none")
-  } else {
-    p.resfit <- p.resfit +
-      geom_bin2d(aes(fill = after_stat(count)), bins = 80) +
-      scale_fill_gradient(low = "grey70", high = "black")
-  }
-  p.resfit <- p.resfit +
-    geom_rangeframe() +
-    scale_x_continuous(breaks = roundedfivenum(x$Residuals$Predicted)) +
-    scale_y_continuous(breaks = roundedfivenum(x$Residuals$Residuals)) +
-    theme_tufte(base_family = "sans") +
-    theme(
-      legend.position = "bottom",
-      axis.text = element_text(colour = "black"),
-      axis.ticks.x = element_line(colour = "white", linewidth = 2)) +
-    ggtitle(x$Outcome)
-  
-  if ( isTRUE(x$Hat$cut[1]) ) {
-    p.resfit <- p.resfit +
-      geom_point(aes(x = Predicted, y = LL),
-                    data = x$Hat,
-                 colour = "blue", size = 4,
-                 shape = 23, fill = "blue") + 
-      geom_point(aes(x = Predicted, y = UL),
-                    data = x$Hat,
-                 colour = "blue", size = 4,
-                 shape = 23, fill = "blue")
-  } else {
-    p.resfit <- p.resfit +
-      stat_smooth(method = "loess",
-                  formula = y ~ x,
-                  se = FALSE, linewidth = 1, colour = "blue")
+  if (isTRUE(x$Hat$cut[1])) {
+    ## residuals versus fitted basic setup
+    x$Residuals$Predicted <- round(x$Residuals$Predicted, digits = 8)
 
-    if (any(!is.na(x$Hat$LL) |
-              !is.na(x$Hat$UL))) {
+    if (x$N < 500) {
+      p.resfit <- ggplot(x$Residuals, aes(Predicted, Residuals))
       p.resfit <- p.resfit +
-        geom_line(mapping = aes(x = Predicted, y = LL),
-                  data = x$Hat,
-                  colour = "blue", linewidth = 1, linetype = 2) +
-        geom_line(mapping = aes(x = Predicted, y = UL),
-                  data = x$Hat,
-                  colour = "blue", linewidth = 1, linetype = 2)
+        geom_point(aes(colour = isEV),
+          alpha = pmin(1 / sqrt(log10(x$N)), 1)
+        ) +
+        scale_colour_manual(values = c("No" = "grey50", "Yes" = "black")) +
+        guides(colour = "none")
+      p.resfit <- p.resfit +
+        geom_tufterange() +
+        scale_x_continuous(breaks = roundedfivenum(x$Residuals$Predicted)) +
+        scale_y_continuous(breaks = roundedfivenum(x$Residuals$Residuals)) +
+        theme_tufte() +
+        theme(
+          legend.position = "bottom",
+          axis.text = element_text(colour = "black")
+        ) +
+        ggtitle(x$Outcome)
+
+    ## add smooths, if available
+    if (any(!is.na(x$Hat$Mid))) {
+      p.resfit <- p.resfit +
+        geom_point(aes(x = Predicted, y = Mid),
+          data = x$Hat,
+          colour = "blue", size = 4,
+          shape = 16, fill = "blue"
+        )
+    }
+    if (any(!is.na(x$Hat$LL))) {
+      p.resfit <- p.resfit +
+        geom_point(aes(x = Predicted, y = LL),
+          data = x$Hat,
+          colour = "blue", size = 4,
+          shape = 23, fill = "blue"
+        )
+    }
+    if (any(!is.na(x$Hat$UL))) {
+      p.resfit <- p.resfit +
+        geom_point(aes(x = Predicted, y = UL),
+          data = x$Hat,
+          colour = "blue", size = 4,
+          shape = 23, fill = "blue"
+        )
+    }
+    } else {
+      ## for N >= 500, and few unique predicted values, use boxplots
+      x$Residuals$Predicted <- factor(x$Residuals$Predicted)
+      p.resfit <- ggplot(x$Residuals, aes(Predicted, Residuals))
+      p.resfit <- p.resfit +
+        geom_boxplot()
+      p.resfit <- p.resfit +
+        geom_tufterange() +
+        scale_y_continuous(breaks = roundedfivenum(x$Residuals$Residuals)) +
+        theme_tufte() +
+        theme(
+          legend.position = "bottom",
+          axis.text = element_text(colour = "black")
+        ) +
+        ggtitle(x$Outcome)
+    }
+  } else {
+    ## residuals versus fitted basic setup
+    p.resfit <- ggplot(x$Residuals, aes(Predicted, Residuals))
+    if (x$N < 500) {
+      p.resfit <- p.resfit +
+        geom_point(aes(colour = isEV),
+          alpha = pmin(1 / sqrt(log10(x$N)), 1)
+        ) +
+        scale_colour_manual(values = c("No" = "grey50", "Yes" = "black")) +
+        guides(colour = "none")
+    } else {
+      p.resfit <- p.resfit +
+        geom_bin2d(aes(fill = after_stat(count)), bins = 80) +
+        scale_fill_gradient(low = "grey70", high = "black")
+    }
+    p.resfit <- p.resfit +
+      geom_tufterange() +
+      scale_x_continuous(breaks = roundedfivenum(x$Residuals$Predicted)) +
+      scale_y_continuous(breaks = roundedfivenum(x$Residuals$Residuals)) +
+      theme_tufte() +
+      theme(
+        legend.position = "bottom",
+        axis.text = element_text(colour = "black")
+      ) +
+      ggtitle(x$Outcome)
+
+    ## add smooths, if available
+    if (any(!is.na(x$Hat$Mid))) {
+      p.resfit <- p.resfit +
+        geom_line(
+          mapping = aes(x = Predicted, y = Mid),
+          data = x$Hat,
+          colour = "blue", linewidth = 1, linetype = 1
+        )
+    }
+    if (any(!is.na(x$Hat$LL))) {
+      p.resfit <- p.resfit +
+        geom_line(
+          mapping = aes(x = Predicted, y = LL),
+          data = x$Hat,
+          colour = "blue", linewidth = 1, linetype = 2
+        )
+    }
+    if (any(!is.na(x$Hat$UL))) {
+      p.resfit <- p.resfit +
+        geom_line(
+          mapping = aes(x = Predicted, y = UL),
+          data = x$Hat,
+          colour = "blue", linewidth = 1, linetype = 2
+        )
     }
   }
 
   ## distributions of residuals
   p.tmpres <- plot(x$testDistribution,
-                   varlab = "Residuals",
-                   plot = FALSE)
+    varlab = "Residuals",
+    plot = FALSE
+  )
 
   p.res <- ggarrange(
     p.tmpres$DensityPlot + ggtitle(x$Outcome),
-    p.tmpres$QQDeviatesPlot, ncol = 1,
-    heights = c(3, 1), align = "v")
+    p.tmpres$QQDeviatesPlot,
+    ncol = 1,
+    heights = c(3, 1), align = "v"
+  )
 
   if (plot) {
     if (ask && dev.interactive()) {
-        oask <- devAskNewPage(TRUE)
-        on.exit(devAskNewPage(oask))
+      oask <- devAskNewPage(TRUE)
+      on.exit(devAskNewPage(oask))
     }
     if (!missing(ncol)) {
       print(ggarrange(
         p.res,
         p.resfit,
-        ncol = ncol))
+        ncol = ncol
+      ))
     } else {
       print(p.res)
       print(p.resfit)
@@ -808,7 +874,8 @@ plot.residualDiagnostics <- function(x, y, plot = TRUE, ask = TRUE, ncol, ...) {
 
   return(invisible(list(
     ResPlot = p.res,
-    ResFittedPlot = p.resfit)))
+    ResFittedPlot = p.resfit
+  )))
 }
 
 #' Plot Diagnostics for an lm model

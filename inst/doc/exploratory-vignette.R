@@ -10,10 +10,10 @@ library(ggplot2)
 library(data.table)
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  
-#  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
-#           data = mtcars)
-#  
+# 
+# egltable(c("mpg", "hp", "qsec", "wt", "vs"),
+#          data = mtcars)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -25,10 +25,10 @@ pander::pandoc.table(
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  
-#  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
-#           data = mtcars, strict=FALSE)
-#  
+# 
+# egltable(c("mpg", "hp", "qsec", "wt", "vs"),
+#          data = mtcars, strict=FALSE)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -40,10 +40,10 @@ pander::pandoc.table(
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  
-#  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
-#    g = "am", data = mtcars, strict = FALSE)
-#  
+# 
+# egltable(c("mpg", "hp", "qsec", "wt", "vs"),
+#   g = "am", data = mtcars, strict = FALSE)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -55,11 +55,11 @@ pander::pandoc.table(
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  
-#  egltable(c("mpg", "hp", "qsec", "wt", "vs"),
-#           g = "am", data = mtcars, strict = FALSE,
-#           parametric = FALSE)
-#  
+# 
+# egltable(c("mpg", "hp", "qsec", "wt", "vs"),
+#          g = "am", data = mtcars, strict = FALSE,
+#          parametric = FALSE)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -72,14 +72,14 @@ pander::pandoc.table(
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  ## example with paired data
-#  egltable(
-#    vars = "extra",
-#    g = "group",
-#    data = sleep,
-#    idvar = "ID",
-#    paired = TRUE)
-#  
+# ## example with paired data
+# egltable(
+#   vars = "extra",
+#   g = "group",
+#   data = sleep,
+#   idvar = "ID",
+#   paired = TRUE)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -95,14 +95,14 @@ justify = "left")
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  egltable(
-#    vars = "extra",
-#    g = "group",
-#    data = sleep,
-#    idvar = "ID",
-#    paired = TRUE,
-#    parametric = FALSE)
-#  
+# egltable(
+#   vars = "extra",
+#   g = "group",
+#   data = sleep,
+#   idvar = "ID",
+#   paired = TRUE,
+#   parametric = FALSE)
+# 
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
@@ -129,9 +129,9 @@ tmp$WeightTertile <- cut(tmp$weight,
 
 
 ## ----eval = FALSE, echo = TRUE, results = "hide"------------------------------
-#  egltable(c("weight", "WeightTertile"), g = "Time",
-#    data = tmp,
-#    idvar = "Chick", paired = TRUE)
+# egltable(c("weight", "WeightTertile"), g = "Time",
+#   data = tmp,
+#   idvar = "Chick", paired = TRUE)
 
 ## ----echo = FALSE, results = "asis"-------------------------------------------
 
