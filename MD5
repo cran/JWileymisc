@@ -1,6 +1,6 @@
-c2f0d4bbab4552ed704ada456b6f636e *DESCRIPTION
+4fb1fa7c0d27299abe1b17632874b1c1 *DESCRIPTION
 c1c348ac6a49ecd78ded030eee8d5889 *NAMESPACE
-83d154feed4bf1d9e1214190a126d950 *NEWS.md
+6f3ab740ef15e8855b7b5b5121be1cac *NEWS.md
 63a9e5dac5047f2c2c171d95bf454f9e *R/data.R
 68d5beeff6af91b1e159c60510ffbf61 *R/descriptives.R
 d48560fd5bcde3593e00c1dce94519f3 *R/descriptives_helpers.R
@@ -10,7 +10,7 @@ d8305baf3d41990db865b9b07c522998 *R/geoms_themes.R
 501a8f4aa88a6874d612e807de9d900b *R/plotting.R
 9010c4e5bb8407ea37bbb1bb69d2794c *R/scoring.R
 fbe31d59c752b33611c6af505faa1794 *R/styler.R
-0b3302b7828ac8d13e61e61db22b47c6 *R/utils.R
+9fd8df7a59380352f78ef19ac40a1f31 *R/utils.R
 42fcb2c511873e56b1923a37e03bfc1e *R/visual_acuity.R
 4d36431cc06c2cf5f31454ae5a129388 *README.md
 75d0a007992c60d09f764686e9397c0f *build/partial.rdb
@@ -18,13 +18,13 @@ fbe31d59c752b33611c6af505faa1794 *R/styler.R
 9a398ef3eb840cb80daf4407ea7c83f8 *data/aces_daily.rda
 7d90c96d74fa0663039f7ea9009e07e2 *inst/doc/diagnostics-vignette.R
 81d331b4b3ab985094d4ff85721445d8 *inst/doc/diagnostics-vignette.Rmd
-895bd0cf3ddaea0a66626cfe829c525e *inst/doc/diagnostics-vignette.html
+3f86d6952b42755e4687c8551f35d94a *inst/doc/diagnostics-vignette.html
 0b4d0ad226df0ad8088835f86e1cc206 *inst/doc/exploratory-vignette.R
 280312b13d8cd9d61c7f21b5d5d9955f *inst/doc/exploratory-vignette.Rmd
-ee9ec16ef683ad3ac558bceec1da68fd *inst/doc/exploratory-vignette.html
+0a5a820dd9c6b0d00421bce7e184148f *inst/doc/exploratory-vignette.html
 6f008b81daf498f58a796f3238fa50d2 *inst/doc/model-test-vignette.R
 91079ad645de951b7a795413949e1176 *inst/doc/model-test-vignette.Rmd
-411925d1c4fef9a81907699f2aba9541 *inst/doc/model-test-vignette.html
+cca60a9c1cc4ec3aa1ba8055eb98f567 *inst/doc/model-test-vignette.html
 5b8c77828c16d0af7570b8c818e3de6c *man/APAStyler.Rd
 55113d0b318dbd2087fd5dc94678a076 *man/APAStyler.SEMSummary.Rd
 e15bd1a6971863bb72556088868dc761 *man/APAStyler.list.Rd
@@ -41,7 +41,7 @@ a338c7b53bcb39c406085c27cd288216 *man/APAStyler.modelTest.lm.Rd
 11721f7f07091d8a1fa84ef017306342 *man/VAObject-class.Rd
 02f529b215d1b8d3e262ad2b9ca8382c *man/VASummaryObject-class.Rd
 a90c8c3f0e6ea881917d97ad30742056 *man/aces_daily.Rd
-cf2441f83398f2771a2972b0a0c7c9b3 *man/as.na.Rd
+9fcc21461e73423035061ed3d37e8260 *man/as.na.Rd
 cd78be9187a73a1bede86696fe892a99 *man/cd.Rd
 81a6b716e070ac55d8214b71f6848e2e *man/compareIVs.Rd
 4a89f9460f99aff112284f0b01487699 *man/compressedrds.Rd
@@ -60,7 +60,7 @@ aa47fb399f424a8aaa5619911a0a82bd *man/findSigRegions.Rd
 8ccab41846a6783e76141a32f8c13c8a *man/formatHtest.Rd
 545bf7c224288c4fcf227577c50160b4 *man/formatMedIQR.Rd
 4171938e6ee054f513bcddd506b3f5ab *man/formatPval.Rd
-8fc4cbaf163a832f0c1fd37db6b8d501 *man/geom_tufterange.Rd
+4a5d5b2da053cd98c97112352baa8c95 *man/geom_tufterange.Rd
 ba7852951ae6c2fdfe200c2a049771ce *man/gglikert.Rd
 fa7d5827901bf575e51f4b5829e4b476 *man/hashDataset.Rd
 ad882657ccf0d5217660a0523eaf71ee *man/intSigRegGraph.Rd
@@ -111,7 +111,7 @@ a44f919a68caf0e8fd8a028090212451 *tests/testthat/test-lm2.R
 5fe15095d355c9497a4301dea7a77315 *tests/testthat/test-plot.R
 03ac0a62a3e9ce2619f2ad7cd4e1a8d8 *tests/testthat/test-scoring.R
 012983a3d333baf504373e5c63a848f7 *tests/testthat/test-star.R
-558d8c5407dff22d6bf660aa06fb5159 *tests/testthat/test-utils.R
+69e550509f6b45b12eda6dbee19a4000 *tests/testthat/test-utils.R
 2f884eabf52f371553875be90300e39e *tests/testthat/test-visual-acuity.R
 9c3e2d16d7f726b9a9468b5780287885 *tests/testthat/test-winsorizor.R
 81d331b4b3ab985094d4ff85721445d8 *vignettes/diagnostics-vignette.Rmd

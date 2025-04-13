@@ -1,6 +1,6 @@
 Package: JWileymisc
 Title: Miscellaneous Utilities and Functions
-Version: 1.4.2
+Version: 1.4.3
 Authors@R: 
     person(given = "Joshua F.",
            family = "Wiley",
@@ -30,8 +30,8 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-03-26 02:34:11 UTC; jwile
+Packaged: 2025-04-13 03:56:59 UTC; jwile
 Author: Joshua F. Wiley [aut, cre] (<https://orcid.org/0000-0002-0271-6702>)
 Maintainer: Joshua F. Wiley <jwiley.psych@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-03-26 05:50:02 UTC
+Date/Publication: 2025-04-13 05:10:06 UTC
